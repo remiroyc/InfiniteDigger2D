@@ -1,0 +1,387 @@
+fileFormatVersion: 2
+guid: 6497770d731f4fc4690fa9dad1ce5784
+TextureImporter:
+  fileIDToRecycleName:
+    21300000: Explo_0
+    21300002: Explo_1
+    21300004: Explo_2
+    21300006: Explo_3
+    21300008: Explo_4
+    21300010: Explo_5
+    21300012: Explo_6
+    21300014: Explo_7
+    21300016: Explo_8
+    21300018: Explo_9
+    21300020: Explo_10
+    21300022: Explo_11
+    21300024: Explo_12
+    21300026: Explo_13
+    21300028: Explo_14
+    21300030: Explo_15
+    21300032: Explo_16
+    21300034: Explo_17
+    21300036: Explo_18
+    21300038: Explo_19
+    21300040: Explo_20
+    21300042: Explo_21
+    21300044: Explo_22
+    21300046: Explo_23
+    21300048: Explo_24
+    21300050: Explo_25
+    21300052: Explo_26
+    21300054: Explo_27
+    21300056: Explo_28
+    21300058: Explo_29
+  serializedVersion: 2
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    linearTexture: 0
+    correctGamma: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: .25
+    normalMapFilter: 0
+  isReadable: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 0
+  cubemapConvolution: 0
+  cubemapConvolutionSteps: 8
+  cubemapConvolutionExponent: 1.5
+  seamlessCubemap: 0
+  textureFormat: -1
+  maxTextureSize: 1024
+  textureSettings:
+    filterMode: -1
+    aniso: 1
+    mipBias: -1
+    wrapMode: 1
+  nPOTScale: 0
+  lightmap: 0
+  rGBM: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: .5, y: .5}
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spritePixelsToUnits: 500
+  alphaIsTransparency: 1
+  textureType: 8
+  buildTargetSettings:
+  - buildTarget: iPhone
+    maxTextureSize: 1024
+    textureFormat: -2
+    compressionQuality: 50
+  spriteSheet:
+    sprites:
+    - name: Explo_0
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 1076
+        width: 334
+        height: 342
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: Explo_1
+      rect:
+        serializedVersion: 2
+        x: 476
+        y: 1090
+        width: 769
+        height: 423
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: Explo_2
+      rect:
+        serializedVersion: 2
+        x: 1352
+        y: 1094
+        width: 880
+        height: 427
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: Explo_3
+      rect:
+        serializedVersion: 2
+        x: 2283
+        y: 1090
+        width: 743
+        height: 521
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: Explo_4
+      rect:
+        serializedVersion: 2
+        x: 3117
+        y: 1095
+        width: 951
+        height: 572
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: Explo_5
+      rect:
+        serializedVersion: 2
+        x: 4113
+        y: 1074
+        width: 785
+        height: 644
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: Explo_6
+      rect:
+        serializedVersion: 2
+        x: 5069
+        y: 1074
+        width: 789
+        height: 644
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: Explo_7
+      rect:
+        serializedVersion: 2
+        x: 6041
+        y: 1078
+        width: 501
+        height: 613
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: Explo_8
+      rect:
+        serializedVersion: 2
+        x: 6807
+        y: 1064
+        width: 562
+        height: 552
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: Explo_9
+      rect:
+        serializedVersion: 2
+        x: 7683
+        y: 1037
+        width: 596
+        height: 593
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: Explo_10
+      rect:
+        serializedVersion: 2
+        x: 8434
+        y: 1037
+        width: 612
+        height: 583
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: Explo_11
+      rect:
+        serializedVersion: 2
+        x: 313
+        y: 274
+        width: 228
+        height: 188
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: Explo_12
+      rect:
+        serializedVersion: 2
+        x: 837
+        y: 121
+        width: 506
+        height: 491
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: Explo_13
+      rect:
+        serializedVersion: 2
+        x: 1505
+        y: 92
+        width: 576
+        height: 551
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: Explo_14
+      rect:
+        serializedVersion: 2
+        x: 2328
+        y: 49
+        width: 680
+        height: 688
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: Explo_15
+      rect:
+        serializedVersion: 2
+        x: 3214
+        y: 28
+        width: 801
+        height: 714
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: Explo_16
+      rect:
+        serializedVersion: 2
+        x: 4128
+        y: 40
+        width: 818
+        height: 697
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: Explo_17
+      rect:
+        serializedVersion: 2
+        x: 5146
+        y: 37
+        width: 774
+        height: 692
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: Explo_18
+      rect:
+        serializedVersion: 2
+        x: 5998
+        y: 40
+        width: 585
+        height: 663
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: Explo_19
+      rect:
+        serializedVersion: 2
+        x: 6768
+        y: 92
+        width: 637
+        height: 585
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: Explo_20
+      rect:
+        serializedVersion: 2
+        x: 7641
+        y: 71
+        width: 675
+        height: 641
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: Explo_21
+      rect:
+        serializedVersion: 2
+        x: 8442
+        y: 63
+        width: 624
+        height: 636
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: Explo_22
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 1749
+        width: 164
+        height: 223
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: Explo_23
+      rect:
+        serializedVersion: 2
+        x: 266
+        y: 1746
+        width: 181
+        height: 222
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: Explo_24
+      rect:
+        serializedVersion: 2
+        x: 454
+        y: 1719
+        width: 181
+        height: 207
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: Explo_25
+      rect:
+        serializedVersion: 2
+        x: 673
+        y: 1677
+        width: 234
+        height: 250
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: Explo_26
+      rect:
+        serializedVersion: 2
+        x: 952
+        y: 1678
+        width: 166
+        height: 233
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: Explo_27
+      rect:
+        serializedVersion: 2
+        x: 1129
+        y: 1674
+        width: 166
+        height: 237
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: Explo_28
+      rect:
+        serializedVersion: 2
+        x: 1325
+        y: 1696
+        width: 231
+        height: 249
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: Explo_29
+      rect:
+        serializedVersion: 2
+        x: 1578
+        y: 1749
+        width: 211
+        height: 196
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+  spritePackingTag: 
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
