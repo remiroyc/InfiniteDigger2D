@@ -1,6 +1,6 @@
-﻿using UnityEngine;
-using System.Collections;
+using UnityEngine;
 
+/// <summary>Trigger sous le mineur : brique visée pour le coup de pioche vers le bas.</summary>
 public class GroundDetector : MonoBehaviour
 {
 
@@ -9,26 +9,22 @@ public class GroundDetector : MonoBehaviour
 
 		void OnTriggerEnter2D (Collider2D other)
 		{
-				if (other.transform.tag == "Ground") {
+				if (other.CompareTag ("Ground")) {
 
-						if (_groundElementSelected != null && _groundElementSelected != other.transform.gameObject) {
-								_groundElementSelected.transform.GetComponent<SpriteRenderer> ().color = Color.white;
+						if (_groundElementSelected != null && _groundElementSelected != other.gameObject) {
+								Highlight (_groundElementSelected, false);
 						}
 
-						GroundElement ge = other.transform.GetComponent<GroundElement> ();
-						if (ge.CurrentGroundType != GroundType.IndestructibleBrick) {
-								other.transform.GetComponent<SpriteRenderer> ().color = Color.red;
-						}
-			_groundElementSelected = other.transform.gameObject;
+						Highlight (other.gameObject, true);
+						_groundElementSelected = other.gameObject;
 						CharController.GroundElementTouched = _groundElementSelected;
-
 				}
 		}
 
 		void OnTriggerExit2D (Collider2D other)
 		{
-				if (other.transform.tag == "Ground") {
-						other.transform.GetComponent<SpriteRenderer> ().color = Color.white;
+				if (other.CompareTag ("Ground")) {
+						Highlight (other.gameObject, false);
 
 						if (CharController.Grounded) {
 								CharController.Grounded = false;
@@ -38,5 +34,13 @@ public class GroundDetector : MonoBehaviour
 						}
 				}
 		}
-	
+
+		private static void Highlight (GameObject go, bool on)
+		{
+				var element = go != null ? go.GetComponent<GroundElement> () : null;
+				if (element != null) {
+						element.SetHighlight (on);
+				}
+		}
+
 }

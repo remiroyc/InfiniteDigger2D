@@ -37,6 +37,15 @@ public class Menu : MonoBehaviour
 				}
 				Time.timeScale = 1;
 
+				// La torche du décor scintille
+				var torch = GameObject.Find ("Light");
+				if (torch != null) {
+						var torchRenderer = torch.GetComponent<SpriteRenderer> ();
+						if (torchRenderer != null) {
+								Tween.Flicker (torchRenderer, 0.7f, 1f, 8f);
+						}
+				}
+
 				_dbScript = FindAnyObjectByType<DBScript> ();
 				if (_dbScript == null) {
 						GameObject go = new GameObject ("Database");
@@ -46,7 +55,7 @@ public class Menu : MonoBehaviour
 				_dbScript.BindMenu (this);
 
 				_view = MenuView.Create ();
-				_view.OnPlay = () => SceneManager.LoadScene ("test");
+				_view.OnPlay = () => SceneFader.LoadScene ("test");
 				_view.OnHighscore = () => CurrentMenuState = MenuState.HIGHSCORE;
 				_view.OnOptions = () => CurrentMenuState = MenuState.OPTION;
 				_view.OnClose = () => CurrentMenuState = MenuState.MENU;

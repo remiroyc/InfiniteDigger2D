@@ -17,6 +17,10 @@ public class CameraManager : MonoBehaviour
 		private BoxCollider2D _leftWall, _rightWall;
 		private float _fittedAspect = -1f;
 
+		// Secousse : décalage appliqué par-dessus le défilement, retiré à la fin
+		private Vector3 _shakeOffset;
+		private Coroutine _shake;
+
 		void Start ()
 		{
 
@@ -86,7 +90,34 @@ public class CameraManager : MonoBehaviour
 				newPosition.y -= CameraSpeed;
 				transform.position = newPosition;
 				++cameraTick;
-				Distance = Vector3.Distance (_initialPos, transform.position);
+				Distance = Vector3.Distance (_initialPos, transform.position - _shakeOffset);
+		}
+
+		/// <summary>Secousse décroissante (dynamite, coup, mort). Continue même si le composant est désactivé.</summary>
+		public void Shake (float amplitude, float duration)
+		{
+				if (_shake != null) {
+						StopCoroutine (_shake);
+						transform.position -= _shakeOffset;
+						_shakeOffset = Vector3.zero;
+				}
+				_shake = StartCoroutine (ShakeRoutine (amplitude, duration));
+		}
+
+		private IEnumerator ShakeRoutine (float amplitude, float duration)
+		{
+				float elapsed = 0f;
+				while (elapsed < duration) {
+						elapsed += Time.unscaledDeltaTime;
+						float k = 1f - Mathf.Clamp01 (elapsed / duration);
+						transform.position -= _shakeOffset;
+						_shakeOffset = (Vector3)(Random.insideUnitCircle * amplitude * k);
+						transform.position += _shakeOffset;
+						yield return null;
+				}
+				transform.position -= _shakeOffset;
+				_shakeOffset = Vector3.zero;
+				_shake = null;
 		}
 
 }

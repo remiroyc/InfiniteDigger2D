@@ -1,6 +1,6 @@
-﻿using UnityEngine;
-using System.Collections;
+using UnityEngine;
 
+/// <summary>Trigger devant le mineur : brique visée pour le coup de pioche latéral.</summary>
 public class FaceDetector : MonoBehaviour
 {
 
@@ -9,29 +9,33 @@ public class FaceDetector : MonoBehaviour
 
 		void OnTriggerEnter2D (Collider2D other)
 		{
-				if (other.transform.tag == "Ground") {
+				if (other.CompareTag ("Ground")) {
 
-						if (_faceElementSelected != null && _faceElementSelected != other.transform.gameObject) {
-								_faceElementSelected.transform.GetComponent<SpriteRenderer> ().color = Color.white;
+						if (_faceElementSelected != null && _faceElementSelected != other.gameObject) {
+								Highlight (_faceElementSelected, false);
 						}
 
-						GroundElement ge = other.transform.GetComponent<GroundElement> ();
-						if (ge.CurrentGroundType != GroundType.IndestructibleBrick) {
-								other.transform.GetComponent<SpriteRenderer> ().color = Color.red;
-						}
-						_faceElementSelected = other.transform.gameObject;
+						Highlight (other.gameObject, true);
+						_faceElementSelected = other.gameObject;
 						CharController.FaceElementTouched = _faceElementSelected;
-
 				}
 		}
-	
+
 		void OnTriggerExit2D (Collider2D other)
 		{
-				if (other.transform.tag == "Ground") {
-						other.transform.GetComponent<SpriteRenderer> ().color = Color.white;
-						if (CharController.FaceElementTouched == other.transform.gameObject) {
+				if (other.CompareTag ("Ground")) {
+						Highlight (other.gameObject, false);
+						if (CharController.FaceElementTouched == other.gameObject) {
 								CharController.FaceElementTouched = null;
 						}
+				}
+		}
+
+		private static void Highlight (GameObject go, bool on)
+		{
+				var element = go != null ? go.GetComponent<GroundElement> () : null;
+				if (element != null) {
+						element.SetHighlight (on);
 				}
 		}
 

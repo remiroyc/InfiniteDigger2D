@@ -24,6 +24,9 @@ public class GameHud : MonoBehaviour
 
 		private int _lastCoins = int.MinValue, _lastDistance = int.MinValue, _lastDynamites = int.MinValue;
 		private float _lastHealthRatio = -1f;
+		private RectTransform _coinBox, _healthBar;
+		private Coroutine _lowHealthBlink;
+		private const float LowHealthRatio = 0.34f;
 
 		private static string L (string key)
 		{
@@ -60,6 +63,7 @@ public class GameHud : MonoBehaviour
 
 				// Compteurs : la texture a l'icône à gauche et un cartouche à droite, le texte va dans le cartouche
 				var coinBox = UiKit.Image (_hud, "CoinBox", UiKit.Sprite ("hub_coin"), topLeft, new Vector2 (32f, -32f), new Vector2 (216f, 84f));
+				_coinBox = coinBox.rectTransform;
 				_coins = UiKit.Text (coinBox.transform, "Value", "0", 46f, TextAlignmentOptions.Center, new Vector2 (0.5f, 0.5f), new Vector2 (36f, 0f), new Vector2 (120f, 84f));
 
 				var distanceBox = UiKit.Image (_hud, "DistanceBox", UiKit.Sprite ("hub_time"), topLeft, new Vector2 (324f, -32f), new Vector2 (216f, 84f));
@@ -68,6 +72,7 @@ public class GameHud : MonoBehaviour
 				// Barre de vie sous les compteurs
 				var barBack = UiKit.Image (_hud, "HealthBar", UiKit.WhiteSprite, topLeft, new Vector2 (32f, -132f), new Vector2 (508f, 32f));
 				barBack.color = new Color (0f, 0f, 0f, 0.6f);
+				_healthBar = barBack.rectTransform;
 				var fillRect = UiKit.Panel (barBack.transform, "Fill");
 				fillRect.offsetMin = new Vector2 (4f, 4f);
 				fillRect.offsetMax = new Vector2 (-4f, -4f);
@@ -96,8 +101,12 @@ public class GameHud : MonoBehaviour
 				if (coins == _lastCoins) {
 						return;
 				}
+				bool increased = coins > _lastCoins && _lastCoins != int.MinValue;
 				_lastCoins = coins;
 				_coins.text = coins.ToString ();
+				if (increased) {
+						Tween.Punch (_coinBox, 1.12f, 0.16f, true);
+				}
 		}
 
 		public void SetDistance (int meters)
@@ -114,8 +123,12 @@ public class GameHud : MonoBehaviour
 				if (count == _lastDynamites) {
 						return;
 				}
+				bool changed = _lastDynamites != int.MinValue;
 				_lastDynamites = count;
 				_dynamites.text = count.ToString ();
+				if (changed) {
+						Tween.Punch (_dynamites.rectTransform, 1.4f, 0.18f, true);
+				}
 		}
 
 		public void SetHealth (int health, int maxHealth)
@@ -124,9 +137,42 @@ public class GameHud : MonoBehaviour
 				if (Mathf.Approximately (ratio, _lastHealthRatio)) {
 						return;
 				}
+				bool decreased = ratio < _lastHealthRatio;
 				_lastHealthRatio = ratio;
 				_healthFill.fillAmount = ratio;
 				_healthFill.color = Color.Lerp (new Color (0.85f, 0.15f, 0.15f), new Color (0.25f, 0.8f, 0.3f), ratio);
+
+				if (decreased) {
+						Tween.ShakeRect (_healthBar, 6f, 0.3f);
+				}
+
+				bool low = ratio > 0f && ratio <= LowHealthRatio;
+				if (low && _lowHealthBlink == null) {
+						_lowHealthBlink = StartCoroutine (LowHealthBlink ());
+				} else if (!low && _lowHealthBlink != null) {
+						StopCoroutine (_lowHealthBlink);
+						_lowHealthBlink = null;
+						var c = _healthFill.color;
+						c.a = 1f;
+						_healthFill.color = c;
+				}
+		}
+
+		/// <summary>Le HUD encaisse un coup : la barre de vie tremble.</summary>
+		public void OnDamage ()
+		{
+				Tween.ShakeRect (_healthBar, 8f, 0.3f);
+		}
+
+		// Sous un tiers de vie, la barre pulse (temps réel : fonctionne aussi pendant le hit-stop)
+		private System.Collections.IEnumerator LowHealthBlink ()
+		{
+				while (true) {
+						var c = _healthFill.color;
+						c.a = 0.55f + 0.45f * Mathf.Abs (Mathf.Sin (Time.unscaledTime * 5f));
+						_healthFill.color = c;
+						yield return null;
+				}
 		}
 
 		// ------------------------------------------------------------------ Pause

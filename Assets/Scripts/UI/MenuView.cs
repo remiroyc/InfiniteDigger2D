@@ -62,6 +62,7 @@ public class MenuView : MonoBehaviour
 				title.fontSizeMax = 130f;
 				title.fontSizeMin = 70f;
 				title.outlineWidth = 0.25f;
+				Tween.Bob (title.rectTransform, 10f, 2.6f);
 
 				var normal = UiKit.Sprite ("button_normal");
 				var hover = UiKit.Sprite ("button_hover");

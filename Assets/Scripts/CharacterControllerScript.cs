@@ -23,7 +23,6 @@ public class CharacterControllerScript : MonoBehaviour
 		private Rigidbody2D _rigidbody;
 		private ContactFilter2D _coinFilter;
 		private readonly Collider2D[] _coinBuffer = new Collider2D[8];
-		private GameObject _coinScorePrefab;
 		public float Move;
 		public int NbAttack = 0;
 		public GameManager GameManager;
@@ -45,6 +44,32 @@ public class CharacterControllerScript : MonoBehaviour
 		public float JumpLockout = 0.25f;
 		private ContactFilter2D _groundContactFilter;
 		private float _jumpLockUntil;
+
+		// Atterrissage : écrasement + poussière quand on retrouve le sol après un vrai temps en l'air
+		private bool _wasGrounded;
+		private float _airTime;
+
+		// Chute : étirement vertical proportionnel à la vitesse, traînée au-delà de FallTrailSpeed
+		public float FallStretchSpeed = 10f;
+		public float FallTrailSpeed = 3.5f;
+		private Vector3 _baseScale;
+		private bool _stretched;
+		private TrailRenderer _fallTrail;
+
+		private void ApplyBaseScale (float mx, float my)
+		{
+				var current = transform.localScale;
+				float signX = current.x < 0f ? -1f : 1f;
+				transform.localScale = new Vector3 (signX * _baseScale.x * mx, _baseScale.y * my, _baseScale.z);
+		}
+
+		private static void SetHighlight (GameObject brick, bool on)
+		{
+				var element = brick != null ? brick.GetComponent<GroundElement> () : null;
+				if (element != null) {
+						element.SetHighlight (on);
+				}
+		}
 
     #region MONO BEHAVIOUR METHODS
 
@@ -69,13 +94,33 @@ public class CharacterControllerScript : MonoBehaviour
 				_coinFilter = new ContactFilter2D ();
 				_coinFilter.SetLayerMask (CoinLayer);
 				_coinFilter.useTriggers = true;
-				_coinScorePrefab = Resources.Load ("100") as GameObject;
 
 				// Contact avec le sol : collider du sol (pas trigger) dont la normale pointe vers le haut
 				_groundContactFilter = new ContactFilter2D ();
 				_groundContactFilter.SetLayerMask (GroundLayer);
 				_groundContactFilter.useTriggers = false;
 				_groundContactFilter.SetNormalAngle (80f, 100f);
+
+				var scale = transform.localScale;
+				_baseScale = new Vector3 (Mathf.Abs (scale.x), Mathf.Abs (scale.y), scale.z);
+
+				// Traînée de chute rapide, derrière le mineur
+				var trailGo = new GameObject ("FallTrail");
+				trailGo.transform.SetParent (transform, false);
+				_fallTrail = trailGo.AddComponent<TrailRenderer> ();
+				_fallTrail.time = 0.18f;
+				_fallTrail.startWidth = 0.45f;
+				_fallTrail.endWidth = 0.05f;
+				_fallTrail.minVertexDistance = 0.05f;
+				_fallTrail.numCapVertices = 4;
+				_fallTrail.sharedMaterial = new Material (Shader.Find ("Sprites/Default"));
+				_fallTrail.startColor = new Color (1f, 1f, 1f, 0.3f);
+				_fallTrail.endColor = new Color (1f, 1f, 1f, 0f);
+				if (_spriteRenderer != null) {
+						_fallTrail.sortingLayerID = _spriteRenderer.sortingLayerID;
+						_fallTrail.sortingOrder = _spriteRenderer.sortingOrder - 1;
+				}
+				_fallTrail.emitting = false;
 		}
 	
 		void FixedUpdate ()
@@ -173,16 +218,16 @@ public class CharacterControllerScript : MonoBehaviour
 
 								var ge = newFaceElementTouched.GetComponent<GroundElement> ();
 								if (ge.CurrentGroundType != GroundType.IndestructibleBrick) {
-										newFaceElementTouched.GetComponent<SpriteRenderer> ().color = Color.red;
+										SetHighlight (newFaceElementTouched, true);
 								}
 					
 								if (FaceElementTouched != null) {
-										FaceElementTouched.GetComponent<SpriteRenderer> ().color = Color.white;
+										SetHighlight (FaceElementTouched, false);
 								}
 								FaceElementTouched = newFaceElementTouched;
 						}
 				} else if (FaceElementTouched != null) {
-						FaceElementTouched.GetComponent<SpriteRenderer> ().color = Color.white;
+						SetHighlight (FaceElementTouched, false);
 				}
 
 				GameObject newGroundElementTouched = null;
@@ -197,20 +242,45 @@ public class CharacterControllerScript : MonoBehaviour
 
 								var ge = newGroundElementTouched.GetComponent<GroundElement> ();
 								if (ge.CurrentGroundType != GroundType.IndestructibleBrick) {
-										newGroundElementTouched.GetComponent<SpriteRenderer> ().color = Color.red;
+										SetHighlight (newGroundElementTouched, true);
 								}
 
 								if (GroundElementTouched != null) {
-										GroundElementTouched.GetComponent<SpriteRenderer> ().color = Color.white;
+										SetHighlight (GroundElementTouched, false);
 								}
 								GroundElementTouched = newGroundElementTouched;
 						}
 				} else if (GroundElementTouched != null) {
-						GroundElementTouched.GetComponent<SpriteRenderer> ().color = Color.white;
+						SetHighlight (GroundElementTouched, false);
 				}
 
 				Grounded = GroundElementTouched != null;
 				_characterAnimator.SetBool ("Grounded", Grounded);
+
+				// Chute : le mineur s'étire avec la vitesse et laisse une traînée quand ça va vite.
+				// Remis à l'échelle de base avant l'écrasement d'atterrissage, qui part de là.
+				float verticalSpeed = _rigidbody != null ? _rigidbody.linearVelocity.y : 0f;
+				bool falling = !Grounded && verticalSpeed < -1f && _airTime > 0.1f;
+				if (falling) {
+						float stretch = Mathf.Clamp01 (-verticalSpeed / FallStretchSpeed) * 0.22f;
+						ApplyBaseScale (1f - stretch * 0.55f, 1f + stretch);
+						_stretched = true;
+				} else if (_stretched) {
+						ApplyBaseScale (1f, 1f);
+						_stretched = false;
+				}
+				if (_fallTrail != null) {
+						_fallTrail.emitting = !Grounded && verticalSpeed < -FallTrailSpeed;
+				}
+
+				if (Grounded && !_wasGrounded && _airTime > 0.15f) {
+						Tween.Squash (transform, 1.2f, 0.8f, 0.14f);
+						if (_spriteRenderer != null) {
+								Debris.DustPuff (transform.position + Vector3.down * 0.45f, _spriteRenderer.sortingLayerID, _spriteRenderer.sortingOrder - 1);
+						}
+				}
+				_airTime = Grounded ? 0f : _airTime + Time.deltaTime;
+				_wasGrounded = Grounded;
 
 				/*
 				#if UNITY_EDITOR
@@ -242,21 +312,59 @@ public class CharacterControllerScript : MonoBehaviour
 	
 	#region OBJECTS MANAGEMENT
 	
-		IEnumerator CreateDynamite (Vector3 pos)
+		private static GameObject _dynamitePrefab;
+
+		/// <summary>
+		/// Pose de dynamite : le bâton part de la main quand le bras est tendu, décrit un petit
+		/// arc en tournant, s'écrase sur la brique visée, puis la mèche s'allume.
+		/// </summary>
+		IEnumerator PlantDynamite (GameObject targetBrick)
 		{
-				yield return new WaitForSeconds (0.6f);
-				var dynamitePrefab = Resources.Load ("Dynamite") as GameObject;
-				var dynamite = Instantiate (dynamitePrefab, pos, Quaternion.identity) as GameObject;
-				dynamite.transform.parent = GroundElementTouched.transform;
+				yield return new WaitForSeconds (0.25f); // le bras de l'animation Throw est tendu
 
-				if (GroundElementTouched == null) {
-						Debug.LogWarning ("Impossible de lancer une dynamite, car il n'y a pas de ground element");
-				} else {
-
-						var g = GroundElementTouched.GetComponent<GroundElement> ();
-						dynamite.GetComponent<Dynamite> ().GroundElem = g;
-						_attacking = false;
+				if (_dynamitePrefab == null) {
+						_dynamitePrefab = Resources.Load<GameObject> ("Dynamite");
 				}
+				var start = transform.position + new Vector3 (FacingRight ? 0.25f : -0.25f, 0.1f, 0f);
+				var end = targetBrick != null
+						? targetBrick.transform.position + Vector3.up * 0.45f
+						: new Vector3 (transform.position.x, transform.position.y - 0.5f, 0f);
+				var dynamite = Instantiate (_dynamitePrefab, start, Quaternion.identity);
+
+				const float flight = 0.3f;
+				float spin = FacingRight ? -360f : 360f;
+				float elapsed = 0f;
+				while (elapsed < flight && dynamite != null) {
+						elapsed += Time.deltaTime;
+						float k = Mathf.Clamp01 (elapsed / flight);
+						dynamite.transform.position = Vector3.Lerp (start, end, k) + Vector3.up * (Mathf.Sin (k * Mathf.PI) * 0.5f);
+						dynamite.transform.rotation = Quaternion.Euler (0f, 0f, spin * k);
+						yield return null;
+				}
+				if (dynamite == null) {
+						_attacking = false;
+						yield break;
+				}
+
+				// Atterrissage
+				dynamite.transform.position = end;
+				dynamite.transform.rotation = Quaternion.identity;
+				Tween.Squash (dynamite.transform, 1.25f, 0.75f, 0.12f);
+				if (_spriteRenderer != null) {
+						Debris.DustPuff (end + Vector3.down * 0.15f, _spriteRenderer.sortingLayerID, _spriteRenderer.sortingOrder);
+				}
+
+				var script = dynamite.GetComponent<Dynamite> ();
+				if (targetBrick != null) {
+						dynamite.transform.SetParent (targetBrick.transform, true);
+						script.GroundElem = targetBrick.GetComponent<GroundElement> ();
+				} else {
+						Debug.LogWarning ("Dynamite posée sans brique cible : elle n'explosera rien");
+				}
+				script.Arm ();
+
+				Tween.Squash (transform, 1.08f, 0.92f, 0.12f); // léger recul du mineur
+				_attacking = false;
 		}
 
 		public void DetectCoin ()
@@ -282,9 +390,7 @@ public class CharacterControllerScript : MonoBehaviour
 
 						++Coins;
 
-						if (_coinScorePrefab != null) {
-								Instantiate (_coinScorePrefab, item.transform.position, Quaternion.identity);
-						}
+						ScorePopup.Coin (item.transform.position, 100, _spriteRenderer != null ? _spriteRenderer.sortingLayerID : 0);
 						Destroy (item.gameObject);
 				}
 		}
@@ -298,8 +404,7 @@ public class CharacterControllerScript : MonoBehaviour
 				if (Grounded && !_attacking && CanAttack) {
 						_attacking = true;
 						_characterAnimator.Play ("Throw");
-						var dynPos = new Vector3 (transform.position.x, transform.position.y - 0.5f, 0);
-						StartCoroutine (CreateDynamite (dynPos));
+						StartCoroutine (PlantDynamite (GroundElementTouched)); // cible figée au moment du geste
 				}
 		}
 
@@ -320,6 +425,7 @@ public class CharacterControllerScript : MonoBehaviour
 				Jumping = true;
 				_jumpLockUntil = Time.time + JumpLockout;
 				_rigidbody.AddForce (new Vector2 (0, jumpForce));
+				Tween.Squash (transform, 0.82f, 1.22f, 0.14f);
 				this._characterAnimator.Play ("Jump");
 				yield return new WaitForSeconds (1);
 				Jumping = false;
@@ -341,6 +447,9 @@ public class CharacterControllerScript : MonoBehaviour
 						StartCoroutine (Die ());
 				} else {
 						StartCoroutine (HitFeedback ());
+						if (GameManager != null) {
+								GameManager.NotifyDamage (false);
+						}
 				}
 		}
 
@@ -374,16 +483,23 @@ public class CharacterControllerScript : MonoBehaviour
 		IEnumerator Die ()
 		{
 				GameManager.CalculateFinalScore ();
+				GameManager.OnPlayerDying ();
 				IsActive = false;
 				_characterAnimator.Play ("Dead");
-				yield return new WaitForSeconds (2);
+
+				// Ralenti dramatique pendant l'animation de mort, en temps réel pour ne pas durer 6 s
+				Time.timeScale = 0.35f;
+				yield return new WaitForSecondsRealtime (1.4f);
+				if (Mathf.Approximately (Time.timeScale, 0.35f)) {
+						Time.timeScale = 1f;
+				}
 				IsDied = true;
 		}
 
 		private void Flip ()
 		{
 				if (FaceElementTouched != null) {
-						FaceElementTouched.GetComponent<SpriteRenderer> ().color = Color.white;
+						SetHighlight (FaceElementTouched, false);
 						FaceElementTouched = null;
 				}
 
@@ -437,17 +553,25 @@ public class CharacterControllerScript : MonoBehaviour
 				}
 		}
 
+		// Clips miner_attack / miner_attack_crouch : 6 frames à 20 i/s = 0,30 s ; la pioche
+		// touche sur la 4e frame. On attend la fin du clip avant d'autoriser le coup suivant,
+		// sinon l'animation est relancée à mi-course et paraît saccadée.
+		private const float TapImpactTime = 0.15f;
+		private const float TapClipLength = 0.30f;
+
 		IEnumerator WaitAndTap (GroundElement elementManager)
 		{
-				yield return new WaitForSeconds (0.30f);
-				elementManager.Tap ();
-				_attacking = false;
-
-				if (elementManager.CurrentGroundType == GroundType.Nitro) {
-						TakeDamage (NitroDamage);
+				yield return new WaitForSeconds (TapImpactTime);
+				if (elementManager != null) {
+						bool nitro = elementManager.CurrentGroundType == GroundType.Nitro;
+						elementManager.Hit (transform.position);
+						elementManager.Tap (); // peut détruire la brique (nitro, dernière vie)
+						if (nitro) {
+								TakeDamage (NitroDamage); // au moment de l'explosion, pas à la fin du geste
+						}
 				}
-		
-		
+				yield return new WaitForSeconds (TapClipLength - TapImpactTime);
+				_attacking = false;
 		}
 
     #endregion

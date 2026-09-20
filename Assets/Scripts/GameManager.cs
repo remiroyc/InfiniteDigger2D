@@ -34,6 +34,7 @@ public class GameManager : MonoBehaviour
 		private TerrainGenerator _terrain;
 		private MonsterSpawner _spawner;
 		private GameHud _hud;
+		private Atmosphere _atmosphere;
 		private CharacterControllerScript _characterController;
 		private Camera _camera;
 		private CameraManager _cameraManager;
@@ -74,7 +75,12 @@ public class GameManager : MonoBehaviour
 
 				_monsterRoutine = StartCoroutine (GenerateMonsters ());
 
-				// En dernier : une UI qui échoue (ex. ressources TMP absentes) ne doit pas empêcher la partie
+				// En dernier : une UI ou un effet qui échoue ne doit pas empêcher la partie
+				try {
+						_atmosphere = Atmosphere.Create (_camera, Character);
+				} catch (System.Exception e) {
+						Debug.LogError ("[GameManager] Ambiance non créée : " + e.Message);
+				}
 				try {
 						WireHud ();
 				} catch (System.Exception e) {
@@ -158,6 +164,9 @@ public class GameManager : MonoBehaviour
 						return;
 				}
 				_lastMilestoneMeters = _meters;
+				if (_atmosphere != null) {
+						_atmosphere.SetDepth (_meters);
+				}
 
 				if (_yourBestScore > _meters && _meters == _yourBestScore - (_yourBestScore * 0.20f)) {
 						StartCoroutine (DisplayMessage (string.Format (LocalizationStrings.Instance.Values ["BreakYourRecord"], _yourBestScore - _meters), 5));
@@ -218,13 +227,13 @@ public class GameManager : MonoBehaviour
 				_hud = GameHud.Create ();
 				_hud.OnPause = Pause;
 				_hud.OnResume = Replay;
-				_hud.OnRestart = () => { Replay (); SceneManager.LoadScene ("test"); };
-				_hud.OnMenu = () => SceneManager.LoadScene ("menu");
+				_hud.OnRestart = () => { Replay (); SceneFader.LoadScene ("test"); };
+				_hud.OnMenu = () => SceneFader.LoadScene ("menu");
 				_hud.OnQuit = Application.Quit;
 				_hud.OnDynamite = UseDynamite;
 				_hud.OnSoundToggle = ToggleSound;
-				_hud.OnHome = () => { Replay (); SceneManager.LoadScene ("menu"); };
-				_hud.OnReplay = () => { Replay (); SceneManager.LoadScene ("test"); };
+				_hud.OnHome = () => { Replay (); SceneFader.LoadScene ("menu"); };
+				_hud.OnReplay = () => { Replay (); SceneFader.LoadScene ("test"); };
 				_hud.SetDynamites (_nbDynamites);
 		}
 
@@ -342,6 +351,35 @@ public class GameManager : MonoBehaviour
 		public void BangRepercution (GroundElement focusElement)
 		{
 				_terrain.Bang (focusElement);
+				_cameraManager.Shake (0.22f, 0.5f);
+				Tween.HitStop (0.05f, 0.1f);
+				if (_atmosphere != null) {
+						_atmosphere.Flash (0.75f, 0.6f); // la déflagration éclaire la mine
+				}
+		}
+
+    #endregion
+
+    #region FEEDBACK
+
+		/// <summary>Le mineur prend un coup : secousse, ralenti bref, HUD qui tremble.</summary>
+		public void NotifyDamage (bool fatal)
+		{
+				_cameraManager.Shake (fatal ? 0.28f : 0.12f, fatal ? 0.5f : 0.25f);
+				if (!fatal) {
+						Tween.HitStop (0.06f, 0.05f);
+				}
+				if (_hud != null) {
+						_hud.OnDamage ();
+				}
+		}
+
+		/// <summary>Début de l'animation de mort : secousse forte et zoom sur le mineur pendant le ralenti.</summary>
+		public void OnPlayerDying ()
+		{
+				NotifyDamage (true);
+				float from = _camera.orthographicSize;
+				Tween.Value (from, from * 0.8f, 1.2f, size => { if (_camera != null) { _camera.orthographicSize = size; } });
 		}
 
     #endregion
@@ -357,6 +395,7 @@ public class GameManager : MonoBehaviour
 				audio.clip = DieAudio;
 				audio.Play ();
 				Handheld.Vibrate ();
+				cam.Shake (0.3f, 0.5f);
 
 				_died = true;
 				cam.enabled = false;

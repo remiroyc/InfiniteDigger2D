@@ -116,8 +116,8 @@ public class TerrainGenerator
 		}
 
 		/// <summary>
-		/// Explosion de dynamite : toute la ligne de l'élément visé, plus la même colonne
-		/// sur les dix lignes suivantes.
+		/// Explosion de dynamite en vague : la ligne de l'élément visé du centre vers les bords,
+		/// puis la même colonne vers le bas sur dix lignes, avec un léger décalage par pas.
 		/// </summary>
 		public void Bang (GroundElement focus)
 		{
@@ -125,26 +125,53 @@ public class TerrainGenerator
 				if (selected == null) {
 						return;
 				}
+				Tween.Run (BangRoutine (selected, focus.ElementIndex));
+		}
 
-				foreach (var element in selected.GroundElements) {
-						if (element != null) {
-								element.Explosion ();
+		private System.Collections.IEnumerator BangRoutine (GroundRaw selected, int column)
+		{
+				var wait = new WaitForSeconds (0.035f);
+
+				// La ligne, du centre vers les bords
+				var line = selected.GroundElements;
+				for (int distance = 0; distance < line.Length; distance++) {
+						bool any = false;
+						any |= Explode (line, column - distance);
+						if (distance > 0) {
+								any |= Explode (line, column + distance);
+						}
+						if (any) {
+								yield return wait;
 						}
 				}
 
+				// La colonne, vers le bas : les lignes créées après la ligne visée
 				int destroyed = 0;
-				foreach (var row in _rows) {
+				bool below = false;
+				foreach (var row in _rows.ToArray ()) {
 						if (destroyed >= 10) {
 								break;
 						}
-						if (row == selected || row == null || row.GroundElements == null || row.GroundElements.Length <= focus.ElementIndex) {
+						if (row == selected) {
+								below = true;
 								continue;
 						}
-						var element = row.GroundElements [focus.ElementIndex];
-						if (element != null) {
-								element.Explosion ();
+						if (!below || row == null || row.GroundElements == null) {
+								continue;
+						}
+						if (Explode (row.GroundElements, column)) {
 								++destroyed;
+								yield return wait;
 						}
 				}
+		}
+
+		private static bool Explode (GroundElement[] line, int index)
+		{
+				if (line == null || index < 0 || index >= line.Length || line [index] == null) {
+						return false;
+				}
+				line [index].Explosion ();
+				return true;
 		}
 }
