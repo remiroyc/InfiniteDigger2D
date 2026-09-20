@@ -1,6 +1,7 @@
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 /// <summary>
@@ -63,6 +64,8 @@ public static class UiKit
 		/// <summary>Canvas plein écran en overlay, mis à l'échelle sur la largeur de référence.</summary>
 		public static Canvas CreateCanvas (string name, int sortingOrder)
 		{
+				EnsureEventSystem ();
+
 				var go = new GameObject (name, typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
 				var canvas = go.GetComponent<Canvas> ();
 				canvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -74,6 +77,18 @@ public static class UiKit
 				scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
 				scaler.matchWidthOrHeight = 0f; // largeur : même logique que VirtualGui
 				return canvas;
+		}
+
+		/// <summary>
+		/// uGUI ne reçoit aucun clic sans EventSystem. La scène test en a un (boutons de
+		/// déplacement), la scène menu non : on le crée à la demande.
+		/// </summary>
+		private static void EnsureEventSystem ()
+		{
+				if (UnityEngine.Object.FindAnyObjectByType<EventSystem> () != null) {
+						return;
+				}
+				new GameObject ("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
 		}
 
 		/// <summary>RectTransform vide, étiré sur son parent par défaut.</summary>

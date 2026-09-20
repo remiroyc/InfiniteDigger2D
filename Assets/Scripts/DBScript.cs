@@ -40,6 +40,12 @@ public class DBScript : MonoBehaviour
 				}
 		}
 
+		/// <summary>Le Menu est recréé à chaque chargement de la scène, DBScript non : on le rebranche.</summary>
+		public void BindMenu (Menu menu)
+		{
+				_menu = menu;
+		}
+
 		public void SaveUsername (string username)
 		{
 				username = (username ?? string.Empty).Trim ();
