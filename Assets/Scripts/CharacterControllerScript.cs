@@ -8,7 +8,6 @@ public class CharacterControllerScript : MonoBehaviour
 		public float maxSpeed = 2f;
 		public float groundRadius;
 		public LayerMask TapLayer, CoinLayer, GUIButtonLayer, PlayerLayer;
-		public GUISkin Skin;
 		public float jumpForce = 150f;
 		public AudioClip ScreamAudio;
 		public AudioClip TapAudio;
@@ -40,6 +39,13 @@ public class CharacterControllerScript : MonoBehaviour
 		private bool _invulnerable;
 		private SpriteRenderer _spriteRenderer;
 
+		// Saut : le linecast des pieds touche encore le sol pendant l'envol et touche les murs
+		// latéraux en l'air, d'où des sauts infinis. On exige un vrai contact par en dessous,
+		// une vitesse verticale nulle, et un verrou court après chaque saut.
+		public float JumpLockout = 0.25f;
+		private ContactFilter2D _groundContactFilter;
+		private float _jumpLockUntil;
+
     #region MONO BEHAVIOUR METHODS
 
 		void OnCollisionEnter2D (Collision2D col)
@@ -64,6 +70,12 @@ public class CharacterControllerScript : MonoBehaviour
 				_coinFilter.SetLayerMask (CoinLayer);
 				_coinFilter.useTriggers = true;
 				_coinScorePrefab = Resources.Load ("100") as GameObject;
+
+				// Contact avec le sol : collider du sol (pas trigger) dont la normale pointe vers le haut
+				_groundContactFilter = new ContactFilter2D ();
+				_groundContactFilter.SetLayerMask (GroundLayer);
+				_groundContactFilter.useTriggers = false;
+				_groundContactFilter.SetNormalAngle (80f, 100f);
 		}
 	
 		void FixedUpdate ()
@@ -291,15 +303,26 @@ public class CharacterControllerScript : MonoBehaviour
 				}
 		}
 
+		private bool CanJump ()
+		{
+				return Grounded
+				&& Time.time >= _jumpLockUntil
+				&& Mathf.Abs (_rigidbody.linearVelocity.y) < 0.5f
+				&& _rigidbody.IsTouching (_groundContactFilter);
+		}
+
 		IEnumerator Jump ()
 		{
-				if (Grounded) {
-						Grounded = false;
-						_rigidbody.AddForce (new Vector2 (0, jumpForce));
-						this._characterAnimator.Play ("Jump");
-						yield return new WaitForSeconds (1);
-						Jumping = false;
+				if (!CanJump ()) {
+						yield break;
 				}
+				Grounded = false;
+				Jumping = true;
+				_jumpLockUntil = Time.time + JumpLockout;
+				_rigidbody.AddForce (new Vector2 (0, jumpForce));
+				this._characterAnimator.Play ("Jump");
+				yield return new WaitForSeconds (1);
+				Jumping = false;
 		}
 
 		/// <summary>

@@ -12,20 +12,23 @@ des pièces, pose de la dynamite et évite les monstres. Projet Unity créé en
   (NTFS, APFS). Unity refuse d'ouvrir un projet sur ext4 / WSL.
 - Packages : générés dans `Packages/manifest.json` ; le seul ajout explicite
   est `com.unity.ugui` (le HUD utilise `UnityEngine.UI.Text`).
-- Scènes dans le build : `menu` (démarrage) et `test` (mode record).
-  `tutorial` et `Levels/Level1` sont conservées mais désactivées.
+- Deux scènes : `menu` (démarrage) et `test` (mode record). Les anciennes
+  scènes `tutorial` et `Level1`, injouables depuis le passage aux boutons,
+  ont été supprimées (récupérables dans l'historique git).
 
 ## Structure
 
 | Dossier | Contenu |
 |---|---|
-| `Assets/Scripts` | Tout le code du jeu (≈ 30 scripts). Points d'entrée : `Menu`, `GameManager`, `CharacterControllerScript` |
-| `Assets/Scripts/VirtualGui.cs` | Repère IMGUI partagé : 1080 de large, hauteur déduite de l'écran, calé sur `Screen.safeArea` |
+| `Assets/Scripts` | Code du jeu (≈ 25 scripts). Points d'entrée : `Menu` (contrôleur du menu), `GameManager` (rythme, score, pause), `CharacterControllerScript` |
+| `Assets/Scripts/TerrainGenerator.cs`, `MonsterSpawner.cs` | Génération / recyclage des lignes de briques ; apparition des monstres |
+| `Assets/Scripts/UI` | UI uGUI + TextMeshPro construite par code : `UiKit` (fabrique, police TMP dynamique), `GameHud`, `MenuView`, `SafeAreaFitter` |
+| `Assets/Resources/UI` | Sprites du HUD et du menu, police `Carton_Six.ttf` |
 | `Assets/Scripts/DBScript.cs` | Profil et classement **locaux** (`PlayerPrefs`) : pseudo + top 10 |
 | `Assets/Scripts/LocalizationStrings.cs` | Textes FR / ES / DE / IT, anglais par défaut |
 | `Assets/Resources` | Prefabs chargés par nom (`Dynamite`, `100`, `Golem`, `Taupe`, explosions) et musiques |
 | `Assets/Sprites`, `Assets/Animations` | Sprites et clips Mecanim du mineur, des monstres et des effets |
-| `Assets/GUI` | Textures et les deux `GUISkin` de l'interface IMGUI |
+| `Assets/GUI` | Trois textures encore utilisées par le Canvas de `test` (boutons de déplacement, dock) |
 
 ## État de la migration 5.0 → 6000.6
 
@@ -40,8 +43,10 @@ Tout le travail est sur la branche `unity6-migration`, un commit par phase :
 3. **Unity 6** — reserialisation complète, `velocity` → `linearVelocity`,
    `FindObjectOfType` → `FindAnyObjectByType`, IL2CPP + ARM64, minSdk 26,
    iOS 15.
-4. **Polish** — IMGUI sans déformation ni encoche, textes et traductions
-   corrigés, code mort retiré.
+4. **Polish** — textes et traductions corrigés, code mort retiré, audit de
+   performance (allocations par frame, atlas de sprites, audio, mipmaps).
+5. **UI** — HUD, pause, mort et menu réécrits en uGUI + TextMeshPro ; plus
+   aucun IMGUI. Barre de vie, pause automatique en arrière-plan.
 
 ## Ce qui reste à faire
 
@@ -56,13 +61,12 @@ Tout le travail est sur la branche `unity6-migration`, un commit par phase :
 - **Icône** : aucune icône n'est configurée dans Player Settings ; la seule
   source (`Sprites/infinite_digger_140_140.png`) fait 144 px, trop petit
   pour les stores (Android 432 px adaptatif, iOS 1024 px).
-- **Tutoriel et Level1** : ces deux scènes datent d'une version à
-  accéléromètre. Le déplacement se fait maintenant par les boutons uGUI de
-  `test.unity`, qui n'existent ni dans `tutorial` ni dans `Levels/Level1` :
-  le mineur n'y bouge pas. À recâbler (copier le Canvas de `test`) ou à
-  supprimer.
-- **UI** : toujours en IMGUI. Une migration uGUI + TextMeshPro reste
-  possible écran par écran.
+- **Tutoriel** : à refaire sous forme de bulles contextuelles dans la
+  première partie (le Dock uGUI existe déjà) plutôt qu'en scène séparée.
+- **Réglages de jeu** : vitesse caméra, courbe de difficulté et cadence
+  de spawn sont des constantes de `GameManager` ; à sortir dans un
+  `ScriptableObject`. Golem et Rat (prefabs prêts, tag `Monster`) ne sont
+  pas encore instanciés par `MonsterSpawner`.
 
 ## Licence
 

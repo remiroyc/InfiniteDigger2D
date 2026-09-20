@@ -1,76 +1,78 @@
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
+/// <summary>
+/// Chef d'orchestre de la partie : démarrage, rythme (caméra, difficulté), score, pause,
+/// mort, HUD. Le terrain est délégué à TerrainGenerator, les monstres à MonsterSpawner.
+/// </summary>
 public class GameManager : MonoBehaviour
 {
-
 		public GameObject BrickPrefab;
 		public Transform Character;
-		public GameObject CoinPrefab;
 		public AudioClip DieAudio;
-		// public GameObject[] Explosions;
 		public GameObject BlackCache;
 		public int Offset = 6;
 		public GameObject TaupePrefab, RawPrefab;
 		public Transform BlackHub;
-		private readonly Queue<GroundRaw> _groundRaws = new Queue<GroundRaw> ();
-		private bool _died, _isPaused = false;
-		private float _difficulty = 1;
-		private GroundRaw _lastRawGround;
-		private int _meters, _finalScore;
-		private int _nbRaws;
-		private int _nbBrick;
 		public Transform ScoreLine;
-		private CharacterControllerScript _characterController;
-		private float _yTopPosition;
-		private int _yourBestScore;
-		private Queue<char[]> _currentModelRaw = null;
-		private float createTaupeTimer = 0;
-		// private string _messageToDisplay = string.Empty;
 		public GameObject Dock;
-		private int _nbDynamites;
-		private bool _spawningBoss = false;
-		private bool _gameStarted = false;
-		private bool _scoreSaved = false;
+
+		// Réglages de rythme
+		private const float BaseCameraSpeed = 0.01f;
+		private const float CameraSpeedPerDifficulty = 0.0015f;
+		private const float CatchUpMultiplier = 5f;
+		private const float CatchUpScreenFraction = 0.3f;
+		private const float DifficultyStep = 0.07f;
+		private const int DifficultyStepMeters = 15;
+		private const float MonsterMinDifficulty = 2f;
+		private const float SpawnIntervalBase = 3f;
+		private const int StartDynamites = 5;
+		private const int InitialRows = 20;
+
+		private TerrainGenerator _terrain;
+		private MonsterSpawner _spawner;
+		private GameHud _hud;
+		private CharacterControllerScript _characterController;
 		private Camera _camera;
 		private CameraManager _cameraManager;
 		private Coroutine _monsterRoutine;
-		// Les paliers (messages, difficulté) ne doivent se déclencher qu'une fois par mètre parcouru
+
+		private bool _gameStarted, _isPaused, _died, _deathShown, _scoreSaved;
+		private float _difficulty = 1f;
+		private int _meters, _finalScore, _yourBestScore, _nbDynamites;
+		private float _yTopPosition;
+		// Les paliers (messages, difficulté) ne se déclenchent qu'une fois par mètre parcouru
 		private int _lastMilestoneMeters = -1;
-		// HUD uGUI construit par code (compteurs, vie, boutons, pause, mort)
-		private GameHud _hud;
-		private bool _deathShown;
 
     #region MONO BEHAVIOUR METHODS
 
 		private void Awake ()
 		{
-				_currentModelRaw = new Queue<char[]> ();
 				_characterController = Character.GetComponent<CharacterControllerScript> ();
 				_camera = Camera.main;
 				_cameraManager = _camera.GetComponent<CameraManager> ();
 
 				Time.timeScale = 0;
-				_nbDynamites = 5;
+				_nbDynamites = StartDynamites;
 				_yourBestScore = PlayerPrefs.GetInt ("score");
 				_yTopPosition = _camera.transform.position.y + Offset;
 
-				_monsterRoutine = StartCoroutine (GenerateMonsters ());
-
+				// Nombre de briques par ligne : largeur de l'écran / largeur d'une brique, plus une marge
 				var brickBounds = BrickPrefab.GetComponent<Renderer> ().bounds;
 				Vector3 origin = _camera.WorldToScreenPoint (new Vector3 (brickBounds.min.x, brickBounds.max.y, 0f));
 				Vector3 extent = _camera.WorldToScreenPoint (new Vector3 (brickBounds.max.x, brickBounds.min.y, 0f));
-				var brickDim = new Rect (origin.x, Screen.height - origin.y, extent.x - origin.x, origin.y - extent.y);
-		
-				_nbBrick = (int)(Screen.width / brickDim.width) + 2;
+				int bricksPerRow = (int)(Screen.width / (extent.x - origin.x)) + 2;
+
+				_terrain = new TerrainGenerator (RawPrefab, _camera, Offset, bricksPerRow);
+				_spawner = new MonsterSpawner (TaupePrefab, _terrain, _characterController, Offset);
 
 				if (ScoreLine != null) {
 						ScoreLine.transform.position = -new Vector3 (0, (_camera.transform.position.y + _yourBestScore), 0);
 				}
+
+				_monsterRoutine = StartCoroutine (GenerateMonsters ());
 
 				// En dernier : une UI qui échoue (ex. ressources TMP absentes) ne doit pas empêcher la partie
 				try {
@@ -79,7 +81,7 @@ public class GameManager : MonoBehaviour
 						Debug.LogError ("[GameManager] HUD non créé : " + e.Message + "\nWindow > TextMeshPro > Import TMP Essential Resources ?");
 				}
 		}
-	
+
 		void Start ()
 		{
 				StartGame ();
@@ -89,19 +91,21 @@ public class GameManager : MonoBehaviour
 		{
 				_gameStarted = true;
 
-				_currentModelRaw.Enqueue ("BBAAABAAABB".ToArray ());
-				_currentModelRaw.Enqueue ("BABBBBABABB".ToArray ());
-				_currentModelRaw.Enqueue ("BABAABABABB".ToArray ());
-				_currentModelRaw.Enqueue ("BABBABABABB".ToArray ());
-				_currentModelRaw.Enqueue ("BAAAABAAABB".ToArray ());
-				_currentModelRaw.Enqueue ("BBBBBBBBBBB".ToArray ());
-
-				for (int i = 0; i < 20; i++) {
-						CreateRawGround ();
+				// Les premières lignes suivent un motif fixe, le reste est aléatoire
+				_terrain.EnqueuePatterns (new[] {
+						"BBAAABAAABB",
+						"BABBBBABABB",
+						"BABAABABABB",
+						"BABBABABABB",
+						"BAAAABAAABB",
+						"BBBBBBBBBBB"
+				});
+				for (int i = 0; i < InitialRows; i++) {
+						_terrain.CreateRow ();
 				}
+
 				BlackCache.SetActive (false);
 				Time.timeScale = 1;
-
 				_cameraManager.enabled = true;
 				this.GetComponent<AudioSource> ().Play ();
 
@@ -110,7 +114,6 @@ public class GameManager : MonoBehaviour
 
 		void Update ()
 		{
-
 				if (!_gameStarted) {
 						return;
 				}
@@ -128,55 +131,29 @@ public class GameManager : MonoBehaviour
 						return;
 				}
 
-				var camManager = _cameraManager;
-
 				if (_characterController != null && _characterController.IsDied) {
 						_died = true;
 						_cameraManager.enabled = false;
-
 						if (!_scoreSaved) {
 								SaveScore ();
 						}
 						return;
 				}
 
-				// Si le personnage se trouve dans les 30% du bas de l'écran on accélère la caméra
-				if (_camera.WorldToScreenPoint (Character.position).y <= (Screen.width * 0.3)) {
-					camManager.CameraSpeed = (0.01f + (0.0015f * _difficulty)) * 5;
-				} else {
-					camManager.CameraSpeed = 0.01f + (0.0015f * _difficulty);
-				}
+				// La caméra accélère quand le mineur est dans le bas de l'écran
+				float speed = BaseCameraSpeed + CameraSpeedPerDifficulty * _difficulty;
+				bool playerLow = _camera.WorldToScreenPoint (Character.position).y <= Screen.width * CatchUpScreenFraction;
+				_cameraManager.CameraSpeed = playerLow ? speed * CatchUpMultiplier : speed;
 
 				_yTopPosition = _camera.transform.position.y + Offset;
 				if (Character.position.y > _yTopPosition) {
-					KillPlayerAndDestroyGround (camManager);
+						KillPlayerAndDestroyGround (_cameraManager);
+						return;
 				}
 
-				if (_groundRaws.Count > 0) {
-					
-					GroundRaw ground = _groundRaws.Peek ();
-					
-					if (ground != null) {
-						var goGround = ground.gameObject;
-						
-						if (goGround.transform.position.y >= _yTopPosition) {
-							_groundRaws.Dequeue ();
-							Destroy (goGround);
-							
-							
-							if (!_spawningBoss) {
-								CreateRawGround ();
-							}
-							
-						}
-					}
-				}
+				_terrain.Recycle (_yTopPosition);
 
-				_meters = Mathf.RoundToInt (camManager.Distance);
-
-				// Un mètre dure une centaine de frames : sans ce garde, le message "BeCareful" partait
-				// ~100 fois à 10 m (autant de coroutines) et la difficulté gagnait +0.07 par frame
-				// tant que _meters restait multiple de 15, soit +7 d'un coup au lieu de +0.07.
+				_meters = Mathf.RoundToInt (_cameraManager.Distance);
 				if (_meters == _lastMilestoneMeters) {
 						return;
 				}
@@ -195,18 +172,40 @@ public class GameManager : MonoBehaviour
 						}
 				}
 
-				if (_meters > 0 && _meters % 15 == 0) {
-						_difficulty += 0.07f;
+				if (_meters > 0 && _meters % DifficultyStepMeters == 0) {
+						_difficulty += DifficultyStep;
+				}
+		}
+
+		// Appel, notification, changement d'app : on met en pause plutôt que de laisser mourir le mineur
+		void OnApplicationPause (bool paused)
+		{
+				if (paused) {
+						AutoPause ();
+				}
+		}
+
+		void OnApplicationFocus (bool hasFocus)
+		{
+				if (!hasFocus) {
+						AutoPause ();
+				}
+		}
+
+		private void AutoPause ()
+		{
+				if (_gameStarted && !_isPaused && !_died) {
+						Pause ();
 				}
 		}
 
     #endregion
 
-	#region GUI MANAGEMENT
+    #region HUD
 
 		IEnumerator DisplayMessage (string message, float time)
-		{				
-			var animator = Dock.GetComponent<Animator> ();
+		{
+				var animator = Dock.GetComponent<Animator> ();
 				animator.SetBool ("Visible", true);
 				var dockText = Dock.GetComponentInChildren<Text> ();
 				dockText.text = message;
@@ -281,9 +280,9 @@ public class GameManager : MonoBehaviour
 				}
 		}
 
-	#endregion
+    #endregion
 
-    #region TERRAIN GENERATION
+    #region PAUSE / REPRISE
 
 		public void Pause ()
 		{
@@ -299,11 +298,12 @@ public class GameManager : MonoBehaviour
 
 		public void Replay ()
 		{
-
 				Time.timeScale = 1;
-
 				BlackHub.gameObject.SetActive (false);
-				GameObject.Find ("Buttons").SetActive (true);
+				var buttons = GameObject.Find ("Buttons");
+				if (buttons != null) {
+						buttons.SetActive (true);
+				}
 
 				_isPaused = false;
 				_characterController.IsActive = true;
@@ -324,331 +324,52 @@ public class GameManager : MonoBehaviour
 				_monsterRoutine = StartCoroutine (GenerateMonsters ());
 		}
 
+    #endregion
+
+    #region TERRAIN / MONSTRES
+
 		private IEnumerator GenerateMonsters ()
 		{
-				while (_died == false) {
-						if (_difficulty > 2) {
-								CreateMonsters ();
+				while (!_died) {
+						if (_difficulty > MonsterMinDifficulty) {
+								_spawner.TrySpawnTaupe ();
 						}
-						yield return new WaitForSeconds ((3 / _difficulty));	
+						yield return new WaitForSeconds (SpawnIntervalBase / _difficulty);
 				}
 		}
 
-		IEnumerator CreateBoss ()
-		{
-				_spawningBoss = true;
-				var initPos = Camera.main.ScreenToWorldPoint (new Vector3 (0, 0, 0));
-				var lastPosition = _lastRawGround.gameObject.transform.position.y - 0.75f;
-
-				while (_groundRaws.Any()) {
-			
-						var item = _groundRaws.Dequeue ();
-						Destroy (item.gameObject);
-				}
-
-
-				var rawPosition = new Vector3 (initPos.x, lastPosition, 1);
-				var go = Instantiate (RawPrefab, rawPosition, Quaternion.identity) as GameObject;
-				GroundRaw raw = go.GetComponent<GroundRaw> ();
-				raw.InitialBrickVector = initPos;
-				raw.NbElements = _nbBrick;
-				raw.GenerateGroundElements ("CCCCCCCCCCCCCC".ToCharArray ());
-				_groundRaws.Enqueue (raw);
-				_lastRawGround = raw;
-
-				for (int i = 0; i < 20; i++) {
-
-						CreateRawGround ();
-
-				}
-
-				yield return new WaitForSeconds (1f);
-
-				while (!_characterController.Grounded) {
-						yield return new WaitForSeconds (1f);
-				}
-
-				Camera.main.GetComponent<CameraManager> ().enabled = false;
-
-
-				yield return new WaitForSeconds (2f);
-				var golem = Instantiate (Resources.Load ("Golem"), _groundRaws.Peek ().transform.position + new Vector3 (0, 1.75f, 0), Quaternion.identity) as GameObject;
-
-
-				yield return new WaitForSeconds (8f);
-
-				_spawningBoss = false;
-				Camera.main.GetComponent<CameraManager> ().enabled = true;
-				Destroy (golem);
-				Destroy (_groundRaws.Dequeue ().gameObject);
-
-		}
-	
-		public void CreateRawGround ()
-		{
-
-				var initPos = Camera.main.ScreenToWorldPoint (new Vector3 (0, 0, 0));
-
-				Vector3 rawPosition;
-				if (_lastRawGround == null) {
-
-						rawPosition = new Vector3 (initPos.x, Camera.main.transform.position.y - Offset, 1);
-				
-				} else {
-
-						var calculatedPosition = new Vector3 (initPos.x, _lastRawGround.gameObject.transform.position.y - 0.75f, 1);
-
-						/*
-						if ((calculatedPosition.y - Camera.main.transform.position.y) < -10) {
-								return;
-						}
-						*/
-
-						rawPosition = calculatedPosition;
-				}
-
-				var go = Instantiate (RawPrefab, rawPosition, Quaternion.identity) as GameObject;
-			
-
-				GroundRaw raw = go.GetComponent<GroundRaw> ();
-				raw.InitialBrickVector = initPos;
-				raw.NbElements = _nbBrick;
-
-				if (_currentModelRaw == null || !_currentModelRaw.Any ()) {
-
-						raw.GenerateGroundElements ();
-
-						// 2% de chance de créer un modèle prédéfini
-						if (UnityEngine.Random.value <= 0.02f) {
-						
-								foreach (var item in TerrainFactory.GetTerrain()) {
-
-										if (item != null) {
-												_currentModelRaw.Enqueue (item.ToCharArray ());
-										}
-								}
-						}
-
-
-				} else {
-
-						char[] rawModel = _currentModelRaw.Dequeue ();
-						raw.GenerateGroundElements (rawModel);
-
-				}
-
-
-				// GroundRaw raw = new GroundRaw(BrickTransform, 15);
-
-
-				_groundRaws.Enqueue (raw);
-
-				++_nbRaws;
-				_lastRawGround = raw;
-		}
-		
+		/// <summary>Appelé par Dynamite quand la mèche est consumée.</summary>
 		public void BangRepercution (GroundElement focusElement)
 		{
-
-				// Camera.main.transform.parent.GetComponent<Animation> ().Play ();
-
-				GroundRaw selectedRaw = _groundRaws.FirstOrDefault (g => g.GroundElements.Contains (focusElement));
-				
-				foreach (GroundElement elem in selectedRaw.GroundElements) {
-						if (elem != null) {
-								elem.Explosion ();
-						}
-				}
-
-				int nbDeleted = 0;
-				foreach (GroundRaw raw in _groundRaws) {
-
-						if (nbDeleted >= 10) {
-								break;
-						}
-
-						if (raw != selectedRaw) {
-								if (raw.GroundElements != null && raw.GroundElements.Length > focusElement.ElementIndex) {
-										GroundElement item = raw.GroundElements [focusElement.ElementIndex];
-										if (item != null) {
-												item.Explosion ();
-												++nbDeleted;
-										}
-								}
-						}
-				}
-		}
-
-
-		/// <summary>
-		/// Retourne la ligne ou le joueur se trouve
-		/// </summary>
-		public GroundRaw GetRawWithCharacter ()
-		{
-				if (_characterController.GroundElementTouched != null) {
-						var groundElem = _characterController.GroundElementTouched.GetComponent<GroundElement> ();
-						var raw = _groundRaws.FirstOrDefault (g => g.GroundElements != null && g.GroundElements.Contains (groundElem));
-						return raw;
-				}
-				return null;
+				_terrain.Bang (focusElement);
 		}
 
     #endregion
 
-    #region CHARACTER MANAGEMENT
+    #region SCORE
 
 		public void KillPlayerAndDestroyGround (CameraManager cam)
 		{
 				CalculateFinalScore ();
 				SaveScore ();
 
-				Character.GetComponent<AudioSource>().clip = DieAudio;
-				Character.GetComponent<AudioSource>().Play ();
-
+				var audio = Character.GetComponent<AudioSource> ();
+				audio.clip = DieAudio;
+				audio.Play ();
 				Handheld.Vibrate ();
 
 				_died = true;
 				cam.enabled = false;
-				while (_groundRaws.Count > 0) {
-						GroundRaw go = _groundRaws.Dequeue ();
-						Destroy (go.gameObject);
-				}
+				_terrain.Clear ();
 		}
 
 		public void CalculateFinalScore ()
 		{
 				_finalScore = Mathf.RoundToInt (_meters + (_meters * _characterController.Coins / 100));
-				Debug.Log ("CalculateFinalScore() = " + _finalScore);
 		}
-
-    #endregion
-
-	#region MONSTERS MANAGEMENT
-
-		/// <summary>
-		/// Calcul la chance qu'un monstre apparaisse (générée toutes les 5 secondes)
-		/// </summary>
-		/// <returns>The monster.</returns>
-		public void CreateMonsters ()
-		{
-
-				CreateRandomTaupe ();
-
-				/*
-				if (Random.value < 0.1 && !_monsterInstanciated) {
-
-						var golem = Resources.Load ("Golem") as GameObject;
-						var pos = Camera.main.ScreenToWorldPoint (new Vector3 (Screen.width / 2, Screen.height, 0));
-
-						var monsterObj = Instantiate (golem, new Vector3 (pos.x, pos.y, 0), Quaternion.identity) as GameObject;
-						monsterObj.GetComponent<GolemScript> ().MaxYPosition = _yTopPosition;
-						_monsterInstanciated = true;
-
-				}
-				*/
-
-		}
-
-		/*
-		[System.Obsolete()]
-		public void CreateTaupe ()
-		{
-				float diff = Time.time - createTaupeTimer;
-				if (diff >= 5) {
-			
-			
-						var groundRawTab = _groundRaws.Where (g => g.GroundElements != null && g.GroundElements.Any (e => e != null && e.IsEmpty == true)).ToArray ();
-			
-						if (groundRawTab.Any ()) {
-				
-								var randVal = Random.Range (0, groundRawTab.Count ());
-								var taupe = Resources.Load ("Taupe") as GameObject;
-				
-								GroundRaw selectedRaw = groundRawTab [randVal];
-				
-				
-				
-								var groundElementsTab = selectedRaw.GroundElements.Where (g => g != null && g.IsEmpty).ToArray ();
-				
-								var randVal2 = Random.Range (0, groundElementsTab.Count ());
-				
-								//								Debug.Log (groundElementsTab.Count () + " / " + randVal2);
-								GroundElement selectedGroundElem = groundElementsTab [randVal2];
-				
-								int groundIndex = groundElementsTab.ToList ().IndexOf (selectedGroundElem);
-				
-								int index = _groundRaws.ToList ().IndexOf (selectedRaw);
-								var botRaw = _groundRaws.ElementAtOrDefault (index + 1);
-								if (botRaw != null) {
-										var botItem = botRaw.GroundElements [groundIndex];
-					
-										if (selectedGroundElem != null && botItem != null && !botItem.IsEmpty) {
-						
-						
-						
-												var taupeGO = Instantiate (taupe, selectedGroundElem.transform.position, Quaternion.identity) as GameObject;
-												createTaupeTimer = Time.time;
-												taupeGO.GetComponent<TaupeScript> ().Offset = Offset;
-						
-										}
-								}
-						}
-				}
-		}
-*/
-
-		public void CreateRandomTaupe ()
-		{
-
-				float diff = Time.time - createTaupeTimer;
-				if (diff >= 5) {
-
-						var raw = GetRawWithCharacter ();
-
-						if (raw == null) {
-								Debug.LogError ("Impossible de récupérer la ligne");
-						} else {
-
-								var tabTemp = raw.GroundElements.Where (g => g != null).ToArray ();
-								var rand = UnityEngine.Random.Range (0, tabTemp.Count ());
-
-								var groundElem = tabTemp [rand];
-	
-								int realIndex = raw.GroundElements.ToList ().IndexOf (groundElem);
-
-								Vector3 taupePosition = tabTemp [rand].transform.position;
-
-								var liste = _groundRaws.ToList ();
-								int index = liste.IndexOf (raw);
-								var previousRaw = _groundRaws.ElementAtOrDefault (index - 1);
-
-								if (previousRaw != null) {
-				
-										var elemToDestroy = previousRaw.GroundElements [realIndex];
-										if (elemToDestroy != null) {
-
-
-												Instantiate (Resources.Load ("BottomExplosion"), elemToDestroy.transform.position, Quaternion.identity);
-		
-												Destroy (elemToDestroy.gameObject);
-
-												taupePosition += new Vector3 (0, 0.75f, 0);
-												var taupeGO = Instantiate (TaupePrefab, taupePosition, Quaternion.identity) as GameObject;
-												taupeGO.transform.parent = groundElem.transform;
-												taupeGO.GetComponent<TaupeScript> ().Offset = Offset;
-												createTaupeTimer = Time.time;
-
-										}
-								}
-						}
-				}
-		}
-
-	#endregion
 
 		public void SaveScore ()
 		{
-
 				var db = FindAnyObjectByType<DBScript> ();
 				if (db != null) {
 						db.SaveScore (_finalScore);
@@ -662,4 +383,5 @@ public class GameManager : MonoBehaviour
 				}
 		}
 
+    #endregion
 }

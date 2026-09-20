@@ -136,23 +136,29 @@ public class GameHud : MonoBehaviour
 				_pausePanel = UiKit.Panel (root, "PausePanel");
 				var center = new Vector2 (0.5f, 0.5f);
 
+				// Texture menu_paused (412x659) : onglet vert 0-10 % de la hauteur, zone rouge 12-92 %.
+				// Les positions désignent le bord haut des éléments (pivot = ancre).
+				var top = new Vector2 (0.5f, 1f);
 				var box = UiKit.Image (_pausePanel, "Box", UiKit.Sprite ("menu_paused"), center, new Vector2 (0f, 40f), new Vector2 (720f, 1150f));
-				UiKit.Text (box.transform, "Title", L ("Pause"), 90f, TextAlignmentOptions.Center, new Vector2 (0.5f, 1f), new Vector2 (0f, -60f), new Vector2 (600f, 120f));
+				UiKit.Text (box.transform, "Title", L ("Pause"), 80f, TextAlignmentOptions.Center, top, new Vector2 (0f, -8f), new Vector2 (600f, 100f));
 
 				var normal = UiKit.Sprite ("button_normal");
 				var hover = UiKit.Sprite ("button_hover");
 				var size = new Vector2 (440f, 150f);
-				float y = 150f;
+				const float firstButtonTop = -238f; // 4 boutons + 3 espaces de 40, centrés dans la zone rouge
 				const float step = 190f;
-				UiKit.Button (box.transform, "Resume", normal, hover, L ("Resume"), 56f, center, new Vector2 (0f, y), size, () => Invoke (OnResume));
-				UiKit.Button (box.transform, "Restart", normal, hover, L ("Restart"), 56f, center, new Vector2 (0f, y - step), size, () => Invoke (OnRestart));
-				UiKit.Button (box.transform, "Menu", normal, hover, L ("Menu"), 56f, center, new Vector2 (0f, y - 2 * step), size, () => Invoke (OnMenu));
-				UiKit.Button (box.transform, "Quit", normal, hover, L ("Quit"), 56f, center, new Vector2 (0f, y - 3 * step), size, () => Invoke (OnQuit));
+				UiKit.Button (box.transform, "Resume", normal, hover, L ("Resume"), 56f, top, new Vector2 (0f, firstButtonTop), size, () => Invoke (OnResume));
+				UiKit.Button (box.transform, "Restart", normal, hover, L ("Restart"), 56f, top, new Vector2 (0f, firstButtonTop - step), size, () => Invoke (OnRestart));
+				UiKit.Button (box.transform, "Menu", normal, hover, L ("Menu"), 56f, top, new Vector2 (0f, firstButtonTop - 2 * step), size, () => Invoke (OnMenu));
+				UiKit.Button (box.transform, "Quit", normal, hover, L ("Quit"), 56f, top, new Vector2 (0f, firstButtonTop - 3 * step), size, () => Invoke (OnQuit));
 		}
 
 		public void ShowPause (bool visible, bool soundMuted)
 		{
 				_pausePanel.gameObject.SetActive (visible);
+				if (visible) {
+						UiKit.PopIn (this, _pausePanel);
+				}
 				_dynamiteButton.gameObject.SetActive (!visible);
 				_dynamites.gameObject.SetActive (!visible);
 				_pauseButton.gameObject.SetActive (!visible);
@@ -177,10 +183,12 @@ public class GameHud : MonoBehaviour
 				message.fontSizeMax = 44f;
 				message.fontSizeMin = 28f;
 
+				// Texture highscorebox (687x727) : en-tête vert 6-18 % de la hauteur, zone rouge 18-84 %.
+				var top = new Vector2 (0.5f, 1f);
 				var box = UiKit.Image (_deathPanel, "Box", UiKit.Sprite ("highscorebox"), center, new Vector2 (0f, -40f), new Vector2 (940f, 995f));
-				UiKit.Text (box.transform, "Title", L ("YourScore"), 80f, TextAlignmentOptions.Center, new Vector2 (0.5f, 1f), new Vector2 (0f, -70f), new Vector2 (800f, 110f));
+				UiKit.Text (box.transform, "Title", L ("YourScore"), 70f, TextAlignmentOptions.Center, top, new Vector2 (0f, -69f), new Vector2 (800f, 100f));
 
-				float y = -240f;
+				float y = -230f;
 				const float step = 90f;
 				_deathDistance = StatLine (box.transform, "Distance", y);
 				_deathCoins = StatLine (box.transform, "Coins", y - step);
@@ -189,8 +197,8 @@ public class GameHud : MonoBehaviour
 				_deathFinal.fontSize = 56f;
 
 				var buttonSize = new Vector2 (170f, 184f);
-				UiKit.Button (box.transform, "Home", UiKit.Sprite ("button_home_normal"), UiKit.Sprite ("button_home_hover"), null, 0f, new Vector2 (0.5f, 0f), new Vector2 (-130f, 90f), buttonSize, () => Invoke (OnHome));
-				UiKit.Button (box.transform, "Replay", UiKit.Sprite ("button_replay_normal"), UiKit.Sprite ("button_replay_hover"), null, 0f, new Vector2 (0.5f, 0f), new Vector2 (130f, 90f), buttonSize, () => Invoke (OnReplay));
+				UiKit.Button (box.transform, "Home", UiKit.Sprite ("button_home_normal"), UiKit.Sprite ("button_home_hover"), null, 0f, top, new Vector2 (-130f, -620f), buttonSize, () => Invoke (OnHome));
+				UiKit.Button (box.transform, "Replay", UiKit.Sprite ("button_replay_normal"), UiKit.Sprite ("button_replay_hover"), null, 0f, top, new Vector2 (130f, -620f), buttonSize, () => Invoke (OnReplay));
 		}
 
 		private static TextMeshProUGUI StatLine (Transform parent, string name, float y)
@@ -206,6 +214,7 @@ public class GameHud : MonoBehaviour
 				_deathFinal.text = L ("FinalScore") + " " + finalScore;
 				_deathPanel.gameObject.SetActive (true);
 				_hud.gameObject.SetActive (false);
+				UiKit.PopIn (this, _deathPanel);
 		}
 
 		public void HideDeath ()

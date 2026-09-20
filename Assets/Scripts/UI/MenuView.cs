@@ -85,14 +85,16 @@ public class MenuView : MonoBehaviour
 				_highscore = UiKit.Panel (root, "Highscore");
 				var board = Board (_highscore, L ("Highscore"));
 
-				_highscoreEmpty = UiKit.Text (board.transform, "Empty", L ("NoScoreYet"), 44f, TextAlignmentOptions.Center, new Vector2 (0.5f, 0.5f), Vector2.zero, new Vector2 (640f, 400f));
+				// Zone de contenu du tableau : 24-90 % de la hauteur (voir Board)
+				_highscoreEmpty = UiKit.Text (board.transform, "Empty", L ("NoScoreYet"), 44f, TextAlignmentOptions.Center, new Vector2 (0.5f, 0.5f), new Vector2 (0f, -64f), new Vector2 (600f, 400f));
 				_highscoreEmpty.enableAutoSizing = true;
 				_highscoreEmpty.fontSizeMax = 44f;
 				_highscoreEmpty.fontSizeMin = 30f;
 
-				float y = -190f;
+				const float firstRowTop = -235f;
+				const float rowStep = 58f;
 				for (int i = 0; i < MaxRows; i++) {
-						var row = UiKit.Text (board.transform, "Row" + i, string.Empty, 42f, TextAlignmentOptions.Left, new Vector2 (0.5f, 1f), new Vector2 (0f, y - i * 62f), new Vector2 (640f, 60f));
+						var row = UiKit.Text (board.transform, "Row" + i, string.Empty, 40f, TextAlignmentOptions.Left, new Vector2 (0.5f, 1f), new Vector2 (0f, firstRowTop - i * rowStep), new Vector2 (600f, 56f));
 						_rows.Add (row);
 				}
 		}
@@ -119,20 +121,21 @@ public class MenuView : MonoBehaviour
 				var board = Board (_options, L ("Options"));
 				var top = new Vector2 (0.5f, 1f);
 
-				var desc = UiKit.Text (board.transform, "Description", L ("ChooseUsernameDesc"), 38f, TextAlignmentOptions.Center, top, new Vector2 (0f, -170f), new Vector2 (660f, 220f));
+				// Zone de contenu du tableau : 24-90 % de la hauteur (-221 à -828)
+				var desc = UiKit.Text (board.transform, "Description", L ("ChooseUsernameDesc"), 36f, TextAlignmentOptions.Center, top, new Vector2 (0f, -235f), new Vector2 (600f, 160f));
 				desc.enableAutoSizing = true;
-				desc.fontSizeMax = 38f;
-				desc.fontSizeMin = 26f;
+				desc.fontSizeMax = 36f;
+				desc.fontSizeMin = 24f;
 
-				UiKit.Text (board.transform, "Label", L ("ChooseUsername"), 44f, TextAlignmentOptions.Center, top, new Vector2 (0f, -400f), new Vector2 (660f, 60f));
+				UiKit.Text (board.transform, "Label", L ("ChooseUsername"), 42f, TextAlignmentOptions.Center, top, new Vector2 (0f, -405f), new Vector2 (600f, 55f));
 
-				_username = InputField (board.transform, top, new Vector2 (0f, -470f), new Vector2 (620f, 100f));
+				_username = InputField (board.transform, top, new Vector2 (0f, -470f), new Vector2 (600f, 100f));
 				_username.onSubmit.AddListener (_ => Save ());
 
-				UiKit.Button (board.transform, "Save", UiKit.Sprite ("button_normal"), UiKit.Sprite ("button_hover"), L ("Save"), 54f, top, new Vector2 (0f, -640f), new Vector2 (440f, 140f), Save);
-
-				_optionsMessage = UiKit.Text (board.transform, "Message", string.Empty, 34f, TextAlignmentOptions.Center, top, new Vector2 (0f, -800f), new Vector2 (660f, 120f));
+				_optionsMessage = UiKit.Text (board.transform, "Message", string.Empty, 30f, TextAlignmentOptions.Center, top, new Vector2 (0f, -580f), new Vector2 (600f, 60f));
 				_optionsMessage.color = new Color (1f, 0.6f, 0.5f);
+
+				UiKit.Button (board.transform, "Save", UiKit.Sprite ("button_normal"), UiKit.Sprite ("button_hover"), L ("Save"), 54f, top, new Vector2 (0f, -655f), new Vector2 (440f, 140f), Save);
 		}
 
 		private void Save ()
@@ -154,13 +157,17 @@ public class MenuView : MonoBehaviour
 
 		// ------------------------------------------------------------------ Communs
 
-		/// <summary>Panneau central sur le tableau en bois, avec titre et bouton fermer.</summary>
+		/// <summary>
+		/// Panneau central sur le tableau en bois, avec titre et bouton fermer.
+		/// Texture highscore_board (604x678) : marge transparente 0-4 % de la hauteur, en-tête
+		/// vert 4-16 %, contenu 24-90 %. Les positions désignent le bord haut (pivot = ancre).
+		/// </summary>
 		private Image Board (RectTransform panel, string title)
 		{
 				var center = new Vector2 (0.5f, 0.5f);
 				var board = UiKit.Image (panel, "Board", UiKit.Sprite ("highscore_board"), center, new Vector2 (0f, 40f), new Vector2 (820f, 920f));
-				UiKit.Text (board.transform, "Title", title, 70f, TextAlignmentOptions.Center, new Vector2 (0.5f, 1f), new Vector2 (0f, -60f), new Vector2 (600f, 100f));
-				UiKit.Button (board.transform, "Close", UiKit.Sprite ("close_button"), UiKit.Sprite ("close_button_hover"), null, 0f, new Vector2 (1f, 1f), new Vector2 (40f, 40f), new Vector2 (120f, 130f), () => Invoke (OnClose));
+				UiKit.Text (board.transform, "Title", title, 66f, TextAlignmentOptions.Center, new Vector2 (0.5f, 1f), new Vector2 (0f, -42f), new Vector2 (560f, 100f));
+				UiKit.Button (board.transform, "Close", UiKit.Sprite ("close_button"), UiKit.Sprite ("close_button_hover"), null, 0f, new Vector2 (1f, 1f), new Vector2 (30f, 20f), new Vector2 (120f, 130f), () => Invoke (OnClose));
 				return board;
 		}
 
@@ -205,6 +212,11 @@ public class MenuView : MonoBehaviour
 				_overlay.gameObject.SetActive (!main);
 				_highscore.gameObject.SetActive (state == MenuState.HIGHSCORE);
 				_options.gameObject.SetActive (state == MenuState.OPTION);
+
+				if (!main) {
+						UiKit.PopIn (this, _overlay.rectTransform, false);
+						UiKit.PopIn (this, state == MenuState.HIGHSCORE ? _highscore : _options);
+				}
 		}
 
 		private static void Invoke (Action action)

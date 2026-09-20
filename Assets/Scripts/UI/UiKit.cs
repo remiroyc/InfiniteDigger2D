@@ -75,7 +75,7 @@ public static class UiKit
 				scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
 				scaler.referenceResolution = new Vector2 (ReferenceWidth, ReferenceHeight);
 				scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-				scaler.matchWidthOrHeight = 0f; // largeur : même logique que VirtualGui
+				scaler.matchWidthOrHeight = 0f; // calé sur la largeur : la hauteur suit le ratio réel de l'écran
 				return canvas;
 		}
 
@@ -165,6 +165,42 @@ public static class UiKit
 						tmp.outlineColor = OutlineColor;
 				}
 				return tmp;
+		}
+
+		/// <summary>
+		/// Fait apparaître un panneau (déjà actif) : fondu et léger zoom, en temps non mis à
+		/// l'échelle pour fonctionner pendant la pause (Time.timeScale = 0).
+		/// </summary>
+		public static void PopIn (MonoBehaviour runner, RectTransform panel, bool scale = true, float duration = 0.18f)
+		{
+				if (runner == null || panel == null || !panel.gameObject.activeInHierarchy) {
+						return;
+				}
+				var group = panel.GetComponent<CanvasGroup> ();
+				if (group == null) {
+						group = panel.gameObject.AddComponent<CanvasGroup> ();
+				}
+				runner.StartCoroutine (PopInRoutine (panel, group, scale, duration));
+		}
+
+		private static System.Collections.IEnumerator PopInRoutine (RectTransform panel, CanvasGroup group, bool scale, float duration)
+		{
+				float elapsed = 0f;
+				group.alpha = 0f;
+				if (scale) {
+						panel.localScale = Vector3.one * 0.92f;
+				}
+				while (elapsed < duration) {
+						elapsed += Time.unscaledDeltaTime;
+						float k = Mathf.SmoothStep (0f, 1f, Mathf.Clamp01 (elapsed / duration));
+						group.alpha = k;
+						if (scale) {
+								panel.localScale = Vector3.one * Mathf.Lerp (0.92f, 1f, k);
+						}
+						yield return null;
+				}
+				group.alpha = 1f;
+				panel.localScale = Vector3.one;
 		}
 
 		/// <summary>Bouton image avec sprite survolé/pressé optionnel et libellé TMP optionnel.</summary>

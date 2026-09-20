@@ -154,7 +154,6 @@ MonoBehaviour:
   PlayerLayer:
     serializedVersion: 2
     m_Bits: 512
-  Skin: {fileID: 11400000, guid: 6ad382feb22212445b955938191ebe3a, type: 2}
   jumpForce: 200
   ScreamAudio: {fileID: 8300000, guid: 60b08972012e1bf4db09f42c8a03f344, type: 3}
   TapAudio: {fileID: 8300000, guid: 9e475e9290dc1234a835e178371ebf7a, type: 3}

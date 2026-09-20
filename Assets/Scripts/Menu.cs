@@ -5,8 +5,7 @@ public enum MenuState
 {
 		MENU,
 		HIGHSCORE,
-		OPTION,
-		LEVELS
+		OPTION
 }
 
 /// <summary>
@@ -58,9 +57,13 @@ public class Menu : MonoBehaviour
 
 		void Update ()
 		{
-				// Bouton retour Android / Échap : retour à l'accueil
-				if (_state != MenuState.MENU && Input.GetKeyDown (KeyCode.Escape)) {
-						CurrentMenuState = MenuState.MENU;
+				// Bouton retour Android / Échap : retour à l'accueil, puis sortie du jeu
+				if (Input.GetKeyDown (KeyCode.Escape)) {
+						if (_state != MenuState.MENU) {
+								CurrentMenuState = MenuState.MENU;
+						} else {
+								Application.Quit ();
+						}
 				}
 		}
 

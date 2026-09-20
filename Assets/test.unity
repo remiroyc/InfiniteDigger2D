@@ -2151,7 +2151,6 @@ MonoBehaviour:
   TaupePrefab: {fileID: 100000, guid: 4a24e6e0a898b644fba8de9b344559f4, type: 3}
   RawPrefab: {fileID: 100000, guid: 26941d86f1ef28b4292909cc1bf01170, type: 3}
   BlackHub: {fileID: 973749186}
-  _skin: {fileID: 11400000, guid: 6ad382feb22212445b955938191ebe3a, type: 2}
   ScoreLine: {fileID: 1645863800}
   Dock: {fileID: 1648079010}
 --- !u!4 &1411718481
