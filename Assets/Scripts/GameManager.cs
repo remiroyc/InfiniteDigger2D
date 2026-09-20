@@ -23,7 +23,6 @@ public class GameManager : MonoBehaviour
 		private GroundRaw _lastRawGround;
 		private int _meters, _finalScore;
 		private int _nbRaws;
-		private Matrix4x4 _matrix;
 		private int _nbBrick;
 		public GUISkin _skin;
 		public Transform ScoreLine;
@@ -53,10 +52,7 @@ public class GameManager : MonoBehaviour
 				_yTopPosition = Camera.main.transform.position.y + Offset;
 		
 				StartCoroutine (GenerateMonsters ());
-		
-				_matrix = Matrix4x4.TRS (Vector3.zero, Quaternion.identity, new Vector3 (Screen.width / _virtualWidth, Screen.height / _virtualHeight, 1.0f));
-		
-		
+
 				Vector3 origin = Camera.main.WorldToScreenPoint (new Vector3 (BrickPrefab.GetComponent<Renderer>().bounds.min.x, BrickPrefab.GetComponent<Renderer>().bounds.max.y, 0f));
 				Vector3 extent = Camera.main.WorldToScreenPoint (new Vector3 (BrickPrefab.GetComponent<Renderer>().bounds.max.x, BrickPrefab.GetComponent<Renderer>().bounds.min.y, 0f));
 				var brickDim = new Rect (origin.x, Screen.height - origin.y, extent.x - origin.x, origin.y - extent.y);
@@ -105,7 +101,8 @@ public class GameManager : MonoBehaviour
 						return;
 				}
 
-				GUI.matrix = _matrix;
+				GUI.matrix = VirtualGui.Matrix;
+				_virtualHeight = VirtualGui.Height;
 				GUI.skin = _skin;
 
 				if (_died) {

@@ -13,15 +13,9 @@ public class LevelManager : MonoBehaviour
 		private float _initialCameraSpeed;
 		private float _virtualHeight = 1920f;
 		private float _virtualWidth = 1080f;
-		private Matrix4x4 _matrix;
 		private bool _died = false, _scoreSaved = false, _win =false;
 
 	public GUISkin Skin;
-
-		void Awake ()
-		{
-				_matrix = Matrix4x4.TRS (Vector3.zero, Quaternion.identity, new Vector3 (Screen.width / _virtualWidth, Screen.height / _virtualHeight, 1.0f));
-		}
 
 		void Start ()
 		{
@@ -31,7 +25,8 @@ public class LevelManager : MonoBehaviour
 
 		void OnGUI(){
 
-		GUI.matrix = _matrix;
+		GUI.matrix = VirtualGui.Matrix;
+		_virtualHeight = VirtualGui.Height;
 		GUI.skin = Skin;
 
 			if(_win){

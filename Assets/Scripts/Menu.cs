@@ -16,7 +16,6 @@ public class Menu : MonoBehaviour
 		public GUISkin Skin;
 		private float virtualHeight = 1920f;
 		private float virtualWidth = 1080f;
-		private Matrix4x4 _matrix;
 		private DBScript _dbScript;
 		public MenuState CurrentMenuState;
 		public Vector2 scrollPosition = Vector2.zero;
@@ -27,7 +26,6 @@ public class Menu : MonoBehaviour
 		{
 				CurrentMenuState = MenuState.MENU;
 
-				_matrix = Matrix4x4.TRS (Vector3.zero, Quaternion.identity, new Vector3 (Screen.width / virtualWidth, Screen.height / virtualHeight, 1.0f));
 				var animator = GameObject.Find ("Miner").GetComponent<Animator> ();
 				animator.SetBool ("Grounded", true);
 				Time.timeScale = 1;
@@ -49,7 +47,8 @@ public class Menu : MonoBehaviour
 		void OnGUI ()
 		{
 				GUI.skin = Skin;
-				GUI.matrix = _matrix;
+				GUI.matrix = VirtualGui.Matrix;
+				virtualHeight = VirtualGui.Height;
 
 				switch (CurrentMenuState) {
 
