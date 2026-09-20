@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -52,6 +52,7 @@ public sealed class LocalizationStrings
 						Values.Add ("PwdAlreadyTaken", "Désolé tu arrives trop tard, ce nom est déja pris. Essaye d'en choisir un autre !");
 						Values.Add ("LevelSelection", "Sélection du niveau");
 						Values.Add ("ChallengeMode", "Mode record");
+						Values.Add ("NoScoreYet", "Aucun score enregistré pour le moment. Lance une partie !");
 
 						break;
 		
@@ -89,6 +90,7 @@ public sealed class LocalizationStrings
 						Values.Add ("PwdAlreadyTaken", "Siento que es demasiado tarde, este nombre de usuario ya está en uso. Por favor, inténtelo de nuevo.");
 						Values.Add ("LevelSelection", "Level selection");
 						Values.Add ("ChallengeMode", "Challenge mode");
+						Values.Add ("NoScoreYet", "Todavía no hay puntuaciones. ¡Juega una partida!");
 						break;
 		
 				case SystemLanguage.Dutch:
@@ -125,6 +127,7 @@ public sealed class LocalizationStrings
 						Values.Add ("PwdAlreadyTaken", "Leider haben Sie zu spät sind, ist dieser Benutzername bereits vergeben. Bitte versuchen Sie es erneut.");
 						Values.Add ("LevelSelection", "Level selection");
 						Values.Add ("ChallengeMode", "Challenge mode");
+						Values.Add ("NoScoreYet", "Noch keine Punktzahl. Spiel eine Runde!");
 						break;
 		
 				case SystemLanguage.Italian:
@@ -161,6 +164,7 @@ public sealed class LocalizationStrings
 						Values.Add ("PwdAlreadyTaken", "Spiacenti siete troppo tardi, questo il nome utente è già stato preso. Riprova.");
 						Values.Add ("LevelSelection", "Level selection");
 						Values.Add ("ChallengeMode", "Challenge mode");
+						Values.Add ("NoScoreYet", "Nessun punteggio ancora. Gioca una partita!");
 						break;
 		
 				default:
@@ -197,6 +201,7 @@ public sealed class LocalizationStrings
 						Values.Add ("PwdAlreadyTaken", "Sorry you're too late, this username is already taken. Please try again.");
 						Values.Add ("LevelSelection", "Level selection");
 						Values.Add ("ChallengeMode", "Challenge mode");
+						Values.Add ("NoScoreYet", "No score yet. Play a game!");
 						break;
 
 				}

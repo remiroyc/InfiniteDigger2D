@@ -71,10 +71,7 @@ public class GameManager : MonoBehaviour
 	
 		void Start ()
 		{
-				var adManager = FindObjectOfType<AdManager> ();
-				if (adManager != null) {
-						adManager.DisplayAd ();
-				}
+				StartGame ();
 		}
 
 		public void StartGame ()
@@ -160,7 +157,7 @@ public class GameManager : MonoBehaviour
 								}
 
 								if (GUI.Button (new Rect ((_virtualWidth - (_virtualWidth * 0.4f)) / 2, _virtualHeight * 0.5f, (_virtualWidth * 0.4f), (_virtualWidth * 0.13f)), LocalizationStrings.Instance.Values ["Menu"])) {
-										Application.LoadLevel ("Menu");
+										Application.LoadLevel ("menu");
 								}
 								
 
@@ -708,7 +705,10 @@ public class GameManager : MonoBehaviour
 		public void SaveScore ()
 		{
 
-				FindObjectOfType<DBScript> ().StartCoroutine ("SaveScore", _finalScore);
+				var db = FindObjectOfType<DBScript> ();
+				if (db != null) {
+						db.SaveScore (_finalScore);
+				}
 				_scoreSaved = true;
 
 				if (_meters > _yourBestScore) {

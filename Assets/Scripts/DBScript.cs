@@ -1,206 +1,171 @@
-﻿using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
+using UnityEngine;
 using System;
+using System.Collections.Generic;
 
+/// <summary>
+/// Stockage local du profil et du classement (PlayerPrefs).
+/// Remplace l'ancien backend PHP (infinitedigger.azurewebsites.net), hors ligne depuis 2015.
+/// La surface publique est conservée pour Menu et GameManager ; tout est désormais synchrone.
+/// </summary>
 public class DBScript : MonoBehaviour
 {
+		private const string UsernameKey = "Username";
+		private const string HighscoresKey = "LocalHighscores";
+		private const int MaxEntries = 10;
+		private const char EntrySeparator = ';';
+		private const char FieldSeparator = '|';
 
-		public const string HASH = "284edb632dfffec02a4a72e736ed80f4";
-		public const string BASE_URL = "http://infinitedigger.azurewebsites.net/";
 		public Player User = null;
 		public List<Highscore> Highscore = null;
-		private bool _coroutine = false;
 		private Menu _menu;
 
 		void Awake ()
 		{
 				DontDestroyOnLoad (transform.gameObject);
 				_menu = FindObjectOfType<Menu> ();
+				LoadUser ();
 		}
 
-		IEnumerator Start ()
+		void Start ()
 		{
-				string url = BASE_URL + "add_player.php?name=" + WWW.EscapeURL (SystemInfo.deviceUniqueIdentifier) + "&hash=" + WWW.EscapeURL (HASH);
-				Debug.Log (url);
-				WWW result = new WWW (url);
-				yield return result;
+				if (_menu == null) {
+						return;
+				}
 
-				if (result.error == null) {
+				_menu.ConnectionCallback (true);
 
-						if (User == null) {
-								User = new Player ();
-						}
-						GetPlayer (result.text);
+				// Premier lancement : on demande un pseudo avant tout, comme avant
+				if (string.IsNullOrEmpty (User.Username)) {
+						_menu.CurrentMenuState = MenuState.OPTION;
+				}
+		}
 
+		public void SaveUsername (string username)
+		{
+				username = (username ?? string.Empty).Trim ();
+				if (username.Length == 0) {
 						if (_menu != null) {
-								_menu.ConnectionCallback (true);
-								// On test si l'utilisateur a déja au moins édité son pseudo
-								if (string.IsNullOrEmpty (PlayerPrefs.GetString ("Username"))) {
-										_menu.CurrentMenuState = MenuState.OPTION;
-								}
+								_menu.SaveUsernameCallback (0);
 						}
+						return;
+				}
 
-				} else {
-						_menu.ConnectionCallback (false);
+				PlayerPrefs.SetString (UsernameKey, username);
+				PlayerPrefs.Save ();
+				User.Username = username;
+
+				foreach (var entry in Highscore) {
+						entry.PlayerName = username;
+				}
+
+				if (_menu != null) {
+						_menu.SaveUsernameCallback (3);
 				}
 		}
 
-		IEnumerator SaveUsername (string username)
+		public void GetHighscore ()
 		{
-				PlayerPrefs.SetString ("Username", username);
-				string url = BASE_URL + "save_username.php?id=" + User.Id + "&password=" + WWW.EscapeURL (User.Password) + "&username=" + WWW.EscapeURL (username);
-				WWW res = new WWW (url);
-				Debug.Log (url);
-				yield return res;
-		
-				try {
+				Highscore = LoadEntries ();
+		}
 
-						if (string.IsNullOrEmpty (res.error)) {
-								User.Username = username;
+		public void SaveScore (int score)
+		{
+				if (score <= 0) {
+						return;
+				}
+
+				var entries = LoadEntries ();
+				entries.Add (new Highscore () {
+						Meters = score,
+						PlayerName = User.Username,
+						Date = DateTime.Now
+				});
+
+				entries.Sort ((a, b) => b.Meters.CompareTo (a.Meters));
+				if (entries.Count > MaxEntries) {
+						entries.RemoveRange (MaxEntries, entries.Count - MaxEntries);
+				}
+				for (int i = 0; i < entries.Count; i++) {
+						entries [i].Rank = i + 1;
+				}
+
+				PlayerPrefs.SetString (HighscoresKey, Serialize (entries));
+				PlayerPrefs.Save ();
+
+				Highscore = entries;
+				User.BestScore = entries [0].Meters;
+		}
+
+		private void LoadUser ()
+		{
+				User = new Player () {
+						Username = PlayerPrefs.GetString (UsernameKey, string.Empty)
+				};
+				Highscore = LoadEntries ();
+				User.BestScore = Highscore.Count > 0 ? Highscore [0].Meters : 0;
+		}
+
+		// Format : score|ticks;score|ticks;... trié par score décroissant
+		private List<Highscore> LoadEntries ()
+		{
+				var entries = new List<Highscore> ();
+				var raw = PlayerPrefs.GetString (HighscoresKey, string.Empty);
+				if (string.IsNullOrEmpty (raw)) {
+						return entries;
+				}
+
+				var playerName = User != null ? User.Username : string.Empty;
+				foreach (var item in raw.Split (EntrySeparator)) {
+						var fields = item.Split (FieldSeparator);
+						int meters;
+						long ticks;
+						if (fields.Length < 2 || !int.TryParse (fields [0], out meters) || !long.TryParse (fields [1], out ticks)) {
+								continue;
 						}
-
-						int result = 0;
-						int.TryParse (res.text, out result);
-						_menu.SaveUsernameCallback (result);
-		
-				} catch {
-						_menu.CurrentMenuState = MenuState.MENU;
+						entries.Add (new Highscore () {
+								Meters = meters,
+								PlayerName = playerName,
+								Date = new DateTime (ticks)
+						});
 				}
+
+				entries.Sort ((a, b) => b.Meters.CompareTo (a.Meters));
+				for (int i = 0; i < entries.Count; i++) {
+						entries [i].Rank = i + 1;
+				}
+				return entries;
 		}
 
-		IEnumerator GetHighscore ()
+		private static string Serialize (List<Highscore> entries)
 		{
-				string url = BASE_URL + "get_highscore.php";
-				WWW res = new WWW (url);
-				yield return res;
-				
-				var tab = res.text.Split ('%');
-				Highscore = new List<Highscore> ();
-
-
-				for (int i = 1; i < tab.Length; i++) {
-					
-						var item = tab [i - 1];
-						var itemTab = item.Split ('|');
-
-						var score = itemTab [0];
-						var username = itemTab [1];
-						var date = itemTab [2];
-
-
-						DateTime dtt;
-						DateTime.TryParse (date, out dtt);
-
-						Highscore.Add (new Highscore (){
-							Meters = int.Parse(score),
-							PlayerName = username,
-							Rank = i,
-							Date = dtt
-						}); 
-
+				var parts = new string[entries.Count];
+				for (int i = 0; i < entries.Count; i++) {
+						parts [i] = entries [i].Meters + FieldSeparator.ToString () + entries [i].Date.Ticks;
 				}
-
+				return string.Join (EntrySeparator.ToString (), parts);
 		}
-
-		IEnumerator SaveScore (int score)
-		{
-				if (!_coroutine) {
-						_coroutine = true;
-						if (User != null && User.Id != 0 && score > 0) {
-								string url = BASE_URL + "add_score.php?id=" + User.Id + "&score=" + score + "&platform=" + WWW.EscapeURL (Application.platform.ToString ()) 
-										+ "&password=" + WWW.EscapeURL (User.Password);
-								Debug.Log (url);
-								WWW res = new WWW (url);
-								yield return res;
-						}
-						_coroutine = false;
-				}
-		}
-
-		public void GetPlayer (string str)
-		{
-				Debug.Log (str);
-				var tab = str.Split ('|');
-
-				int id;
-				if (!string.IsNullOrEmpty (tab [0])) {
-						if (int.TryParse (tab [0], out id)) {
-								User.Id = id;
-						}
-				}
-
-				if (tab.Length > 2 && !string.IsNullOrEmpty (tab [1])) {
-						User.Username = tab [1];
-				} else {
-						User.Username = "Player" + User.Id;
-				}
-
-				if (!string.IsNullOrEmpty (tab [2])) {
-						User.Password = tab [2];
-				}
-
-				if (!string.IsNullOrEmpty (tab [3])) {
-					int bestScore = 0;
-					if(int.TryParse(tab [3], out bestScore)){
-						User.BestScore = bestScore;
-					}
-				}
-
-		}
-
 }
 
 public class Highscore
 {
+		public int Rank { get; set; }
 
-		public int Rank {
-				get;
-				set;
-		}
+		public string PlayerName { get; set; }
 
-		public string PlayerName {
-				get;
-				set;
-		}
+		public int Meters { get; set; }
 
-		public int Meters {
-				get;
-				set;
-		}
-
-		public DateTime Date {
-				get;
-				set;
-		}
-
+		public DateTime Date { get; set; }
 }
 
 public class Player
 {
-		public string Username {
-				get;
-				set;
-		}
+		public string Username { get; set; }
 
-		public int Id {
-				get;
-				set;
-		}
-
-		public int BestScore {
-				get;
-				set;
-		}
-		
-		public string Password { get; set; }
+		public int BestScore { get; set; }
 
 		public Player ()
 		{
 				Username = string.Empty;
-				Id = 0;
 				BestScore = 0;
-				Password = string.Empty;
 		}
-
 }
