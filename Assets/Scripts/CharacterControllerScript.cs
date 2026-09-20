@@ -53,7 +53,7 @@ public class CharacterControllerScript : MonoBehaviour
 		{
 				_characterAnimator = this.GetComponent<Animator> ();
 				_audioCharacter = this.GetComponent<AudioSource> ();
-				GameManager = FindObjectOfType<GameManager> ();
+				GameManager = FindAnyObjectByType<GameManager> ();
 		}
 	
 		void FixedUpdate ()
@@ -69,15 +69,15 @@ public class CharacterControllerScript : MonoBehaviour
 
 	
 				if (FaceElementTouched != null && !Grounded) {
-						GetComponent<Rigidbody2D> ().velocity = new Vector2 (0, GetComponent<Rigidbody2D> ().velocity.y); // On n'est soumis qu'à la gravité
+						GetComponent<Rigidbody2D> ().linearVelocity = new Vector2 (0, GetComponent<Rigidbody2D> ().linearVelocity.y); // On n'est soumis qu'à la gravité
 				} else {
 
-						if (Move * GetComponent<Rigidbody2D> ().velocity.x < maxSpeed) {
+						if (Move * GetComponent<Rigidbody2D> ().linearVelocity.x < maxSpeed) {
 								GetComponent<Rigidbody2D> ().AddForce (Vector2.right * Move * MoveForce);
 						}
 				
-						if (Mathf.Abs (GetComponent<Rigidbody2D> ().velocity.x) > maxSpeed) {
-								GetComponent<Rigidbody2D> ().velocity = new Vector2 (Mathf.Sign (GetComponent<Rigidbody2D> ().velocity.x) * maxSpeed, GetComponent<Rigidbody2D> ().velocity.y);
+						if (Mathf.Abs (GetComponent<Rigidbody2D> ().linearVelocity.x) > maxSpeed) {
+								GetComponent<Rigidbody2D> ().linearVelocity = new Vector2 (Mathf.Sign (GetComponent<Rigidbody2D> ().linearVelocity.x) * maxSpeed, GetComponent<Rigidbody2D> ().linearVelocity.y);
 						}
 				}
 			
@@ -338,7 +338,7 @@ public class CharacterControllerScript : MonoBehaviour
 								if (elementToDestroy != null && elementToDestroy.CurrentGroundType != GroundType.IndestructibleBrick) {
 
 										_attacking = true;
-										GetComponent<Rigidbody2D> ().velocity = new Vector2 (0f, GetComponent<Rigidbody2D> ().velocity.y);
+										GetComponent<Rigidbody2D> ().linearVelocity = new Vector2 (0f, GetComponent<Rigidbody2D> ().linearVelocity.y);
 
 										if (bottomTap) {
 												_characterAnimator.Play ("CrouchTap");

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 public class SafeScript : MonoBehaviour {
@@ -16,7 +16,7 @@ public class SafeScript : MonoBehaviour {
 
 	IEnumerator Win(){
 		yield return new WaitForSeconds(1.5f);
-		FindObjectOfType<LevelManager>().Win();
+		FindAnyObjectByType<LevelManager>().Win();
 	}
 
 

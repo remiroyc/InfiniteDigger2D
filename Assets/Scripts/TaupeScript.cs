@@ -74,9 +74,9 @@ public class TaupeScript : MonoBehaviour {
 				GameObject stone = Instantiate (_rock, this.transform.position + offset, Quaternion.identity) as GameObject;
 				
 				if (FacingRight) {
-					stone.GetComponent<Rigidbody2D>().velocity = new Vector2 (stoneSpeed, 0);
+					stone.GetComponent<Rigidbody2D>().linearVelocity = new Vector2 (stoneSpeed, 0);
 				} else {
-					stone.GetComponent<Rigidbody2D>().velocity = new Vector2 (-stoneSpeed, 0);
+					stone.GetComponent<Rigidbody2D>().linearVelocity = new Vector2 (-stoneSpeed, 0);
 				}
 
 				yield return new WaitForSeconds (1.5f);

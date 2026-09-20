@@ -22,7 +22,7 @@ public class DBScript : MonoBehaviour
 		void Awake ()
 		{
 				DontDestroyOnLoad (transform.gameObject);
-				_menu = FindObjectOfType<Menu> ();
+				_menu = FindAnyObjectByType<Menu> ();
 				LoadUser ();
 		}
 

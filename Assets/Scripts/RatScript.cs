@@ -50,10 +50,10 @@ public class RatScript : MonoBehaviour
 								}
 						}
 
-						GetComponent<Rigidbody2D>().velocity = (new Vector2 (move, GetComponent<Rigidbody2D>().velocity.y));
+						GetComponent<Rigidbody2D>().linearVelocity = (new Vector2 (move, GetComponent<Rigidbody2D>().linearVelocity.y));
 						_animator.SetFloat ("MoveSpeed", Mathf.Abs (move));
 				} else {
-						GetComponent<Rigidbody2D>().velocity = new Vector2(0, GetComponent<Rigidbody2D>().velocity.y);
+						GetComponent<Rigidbody2D>().linearVelocity = new Vector2(0, GetComponent<Rigidbody2D>().linearVelocity.y);
 						_animator.SetFloat ("MoveSpeed", 0);
 				}
 		}

@@ -706,7 +706,7 @@ public class GameManager : MonoBehaviour
 		public void SaveScore ()
 		{
 
-				var db = FindObjectOfType<DBScript> ();
+				var db = FindAnyObjectByType<DBScript> ();
 				if (db != null) {
 						db.SaveScore (_finalScore);
 				}

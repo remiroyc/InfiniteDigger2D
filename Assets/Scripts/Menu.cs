@@ -32,7 +32,7 @@ public class Menu : MonoBehaviour
 				animator.SetBool ("Grounded", true);
 				Time.timeScale = 1;
 
-				_dbScript = FindObjectOfType<DBScript> ();
+				_dbScript = FindAnyObjectByType<DBScript> ();
 				if (_dbScript == null) {
 						GameObject go = new GameObject ("Database");
 						_dbScript = go.AddComponent<DBScript> ();

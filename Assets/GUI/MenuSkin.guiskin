@@ -3,8 +3,9 @@
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 1
@@ -75,10 +76,13 @@ MonoBehaviour:
     m_TextClipping: 1
     m_ImagePosition: 1
     m_ContentOffset: {x: 3.84, y: 9.26}
+    m_ContentSpacing: 1
     m_FixedWidth: 0
     m_FixedHeight: 0
+    m_ImageIsTopAligned: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
+    m_IsSDF: 0
   m_button:
     m_Name: button
     m_Normal:
@@ -142,10 +146,13 @@ MonoBehaviour:
     m_TextClipping: 1
     m_ImagePosition: 0
     m_ContentOffset: {x: 0, y: 0}
+    m_ContentSpacing: 1
     m_FixedWidth: 0
     m_FixedHeight: 0
+    m_ImageIsTopAligned: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
+    m_IsSDF: 0
   m_toggle:
     m_Name: toggle
     m_Normal:
@@ -209,10 +216,13 @@ MonoBehaviour:
     m_TextClipping: 1
     m_ImagePosition: 0
     m_ContentOffset: {x: 0, y: 0}
+    m_ContentSpacing: 1
     m_FixedWidth: 0
     m_FixedHeight: 0
+    m_ImageIsTopAligned: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
+    m_IsSDF: 0
   m_label:
     m_Name: label
     m_Normal:
@@ -276,10 +286,13 @@ MonoBehaviour:
     m_TextClipping: 1
     m_ImagePosition: 3
     m_ContentOffset: {x: 0, y: 0}
+    m_ContentSpacing: 1
     m_FixedWidth: 0
     m_FixedHeight: 0
+    m_ImageIsTopAligned: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
+    m_IsSDF: 0
   m_textField:
     m_Name: textfield
     m_Normal:
@@ -343,10 +356,13 @@ MonoBehaviour:
     m_TextClipping: 1
     m_ImagePosition: 3
     m_ContentOffset: {x: 30.65, y: 27.85}
+    m_ContentSpacing: 1
     m_FixedWidth: 0
     m_FixedHeight: 0
+    m_ImageIsTopAligned: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
+    m_IsSDF: 0
   m_textArea:
     m_Name: textarea
     m_Normal:
@@ -410,10 +426,13 @@ MonoBehaviour:
     m_TextClipping: 1
     m_ImagePosition: 0
     m_ContentOffset: {x: 0, y: 0}
+    m_ContentSpacing: 1
     m_FixedWidth: 0
     m_FixedHeight: 0
+    m_ImageIsTopAligned: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
+    m_IsSDF: 0
   m_window:
     m_Name: window
     m_Normal:
@@ -477,10 +496,13 @@ MonoBehaviour:
     m_TextClipping: 1
     m_ImagePosition: 0
     m_ContentOffset: {x: 0, y: -18}
+    m_ContentSpacing: 1
     m_FixedWidth: 0
     m_FixedHeight: 0
+    m_ImageIsTopAligned: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
+    m_IsSDF: 0
   m_horizontalSlider:
     m_Name: horizontalslider
     m_Normal:
@@ -544,10 +566,13 @@ MonoBehaviour:
     m_TextClipping: 1
     m_ImagePosition: 2
     m_ContentOffset: {x: 0, y: 0}
+    m_ContentSpacing: 1
     m_FixedWidth: 0
     m_FixedHeight: 12
+    m_ImageIsTopAligned: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
+    m_IsSDF: 0
   m_horizontalSliderThumb:
     m_Name: horizontalsliderthumb
     m_Normal:
@@ -611,10 +636,13 @@ MonoBehaviour:
     m_TextClipping: 1
     m_ImagePosition: 2
     m_ContentOffset: {x: 0, y: 0}
+    m_ContentSpacing: 1
     m_FixedWidth: 0
     m_FixedHeight: 12
+    m_ImageIsTopAligned: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
+    m_IsSDF: 0
   m_verticalSlider:
     m_Name: verticalslider
     m_Normal:
@@ -678,10 +706,13 @@ MonoBehaviour:
     m_TextClipping: 0
     m_ImagePosition: 0
     m_ContentOffset: {x: 0, y: 0}
+    m_ContentSpacing: 1
     m_FixedWidth: 12
     m_FixedHeight: 0
+    m_ImageIsTopAligned: 0
     m_StretchWidth: 0
     m_StretchHeight: 1
+    m_IsSDF: 0
   m_verticalSliderThumb:
     m_Name: verticalsliderthumb
     m_Normal:
@@ -745,10 +776,13 @@ MonoBehaviour:
     m_TextClipping: 1
     m_ImagePosition: 0
     m_ContentOffset: {x: 0, y: 0}
+    m_ContentSpacing: 1
     m_FixedWidth: 12
     m_FixedHeight: 0
+    m_ImageIsTopAligned: 0
     m_StretchWidth: 0
     m_StretchHeight: 1
+    m_IsSDF: 0
   m_horizontalScrollbar:
     m_Name: horizontalscrollbar
     m_Normal:
@@ -812,10 +846,13 @@ MonoBehaviour:
     m_TextClipping: 1
     m_ImagePosition: 2
     m_ContentOffset: {x: 0, y: 0}
+    m_ContentSpacing: 1
     m_FixedWidth: 0
     m_FixedHeight: 15
+    m_ImageIsTopAligned: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
+    m_IsSDF: 0
   m_horizontalScrollbarThumb:
     m_Name: horizontalscrollbarthumb
     m_Normal:
@@ -879,10 +916,13 @@ MonoBehaviour:
     m_TextClipping: 1
     m_ImagePosition: 0
     m_ContentOffset: {x: 0, y: 0}
+    m_ContentSpacing: 1
     m_FixedWidth: 0
     m_FixedHeight: 13
+    m_ImageIsTopAligned: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
+    m_IsSDF: 0
   m_horizontalScrollbarLeftButton:
     m_Name: horizontalscrollbarleftbutton
     m_Normal:
@@ -946,10 +986,13 @@ MonoBehaviour:
     m_TextClipping: 1
     m_ImagePosition: 0
     m_ContentOffset: {x: 0, y: 0}
+    m_ContentSpacing: 1
     m_FixedWidth: 0
     m_FixedHeight: 0
+    m_ImageIsTopAligned: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
+    m_IsSDF: 0
   m_horizontalScrollbarRightButton:
     m_Name: horizontalscrollbarrightbutton
     m_Normal:
@@ -1013,10 +1056,13 @@ MonoBehaviour:
     m_TextClipping: 1
     m_ImagePosition: 0
     m_ContentOffset: {x: 0, y: 0}
+    m_ContentSpacing: 1
     m_FixedWidth: 0
     m_FixedHeight: 0
+    m_ImageIsTopAligned: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
+    m_IsSDF: 0
   m_verticalScrollbar:
     m_Name: verticalscrollbar
     m_Normal:
@@ -1080,10 +1126,13 @@ MonoBehaviour:
     m_TextClipping: 1
     m_ImagePosition: 0
     m_ContentOffset: {x: 0, y: 0}
+    m_ContentSpacing: 1
     m_FixedWidth: 15
     m_FixedHeight: 0
+    m_ImageIsTopAligned: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
+    m_IsSDF: 0
   m_verticalScrollbarThumb:
     m_Name: verticalscrollbarthumb
     m_Normal:
@@ -1147,10 +1196,13 @@ MonoBehaviour:
     m_TextClipping: 1
     m_ImagePosition: 2
     m_ContentOffset: {x: 0, y: 0}
+    m_ContentSpacing: 1
     m_FixedWidth: 15
     m_FixedHeight: 0
+    m_ImageIsTopAligned: 0
     m_StretchWidth: 0
     m_StretchHeight: 1
+    m_IsSDF: 0
   m_verticalScrollbarUpButton:
     m_Name: verticalscrollbarupbutton
     m_Normal:
@@ -1214,10 +1266,13 @@ MonoBehaviour:
     m_TextClipping: 1
     m_ImagePosition: 0
     m_ContentOffset: {x: 0, y: 0}
+    m_ContentSpacing: 1
     m_FixedWidth: 0
     m_FixedHeight: 0
+    m_ImageIsTopAligned: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
+    m_IsSDF: 0
   m_verticalScrollbarDownButton:
     m_Name: verticalscrollbardownbutton
     m_Normal:
@@ -1281,10 +1336,13 @@ MonoBehaviour:
     m_TextClipping: 1
     m_ImagePosition: 0
     m_ContentOffset: {x: 0, y: 0}
+    m_ContentSpacing: 1
     m_FixedWidth: 0
     m_FixedHeight: 0
+    m_ImageIsTopAligned: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
+    m_IsSDF: 0
   m_ScrollView:
     m_Name: scrollview
     m_Normal:
@@ -1348,10 +1406,13 @@ MonoBehaviour:
     m_TextClipping: 1
     m_ImagePosition: 0
     m_ContentOffset: {x: 0, y: 0}
+    m_ContentSpacing: 1
     m_FixedWidth: 0
     m_FixedHeight: 0
+    m_ImageIsTopAligned: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
+    m_IsSDF: 0
   m_CustomStyles:
   - m_Name: FacebookButton
     m_Normal:
@@ -1415,10 +1476,13 @@ MonoBehaviour:
     m_TextClipping: 0
     m_ImagePosition: 0
     m_ContentOffset: {x: 0, y: 5}
+    m_ContentSpacing: 1
     m_FixedWidth: 0
     m_FixedHeight: 0
+    m_ImageIsTopAligned: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
+    m_IsSDF: 0
   - m_Name: Title
     m_Normal:
       m_Background: {fileID: 0}
@@ -1481,10 +1545,13 @@ MonoBehaviour:
     m_TextClipping: 0
     m_ImagePosition: 0
     m_ContentOffset: {x: 0, y: 0}
+    m_ContentSpacing: 1
     m_FixedWidth: 0
     m_FixedHeight: 0
+    m_ImageIsTopAligned: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
+    m_IsSDF: 0
   - m_Name: OptionButton
     m_Normal:
       m_Background: {fileID: 2800000, guid: cab3f7a18bb4b1b499d62125d204dccf, type: 3}
@@ -1547,10 +1614,13 @@ MonoBehaviour:
     m_TextClipping: 0
     m_ImagePosition: 2
     m_ContentOffset: {x: 0, y: 0}
+    m_ContentSpacing: 1
     m_FixedWidth: 0
     m_FixedHeight: 0
+    m_ImageIsTopAligned: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
+    m_IsSDF: 0
   - m_Name: HighScoreBox
     m_Normal:
       m_Background: {fileID: 2800000, guid: 097a93f7d77a0cd45b54b5dc8fb3c8d8, type: 3}
@@ -1613,10 +1683,13 @@ MonoBehaviour:
     m_TextClipping: 0
     m_ImagePosition: 1
     m_ContentOffset: {x: -30, y: -600}
+    m_ContentSpacing: 1
     m_FixedWidth: 0
     m_FixedHeight: 0
+    m_ImageIsTopAligned: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
+    m_IsSDF: 0
   - m_Name: CloseButton
     m_Normal:
       m_Background: {fileID: 2800000, guid: 2c1764e4879215842a930e99453b0ad5, type: 3}
@@ -1679,10 +1752,13 @@ MonoBehaviour:
     m_TextClipping: 0
     m_ImagePosition: 2
     m_ContentOffset: {x: 0, y: 0}
+    m_ContentSpacing: 1
     m_FixedWidth: 0
     m_FixedHeight: 0
+    m_ImageIsTopAligned: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
+    m_IsSDF: 0
   - m_Name: RankLabel
     m_Normal:
       m_Background: {fileID: 0}
@@ -1745,10 +1821,13 @@ MonoBehaviour:
     m_TextClipping: 0
     m_ImagePosition: 3
     m_ContentOffset: {x: 0, y: 0}
+    m_ContentSpacing: 1
     m_FixedWidth: 0
     m_FixedHeight: 0
+    m_ImageIsTopAligned: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
+    m_IsSDF: 0
   - m_Name: LevelBox
     m_Normal:
       m_Background: {fileID: 2800000, guid: e6c2f3f466ef85b4e8cda3ff6f5e34bd, type: 3}
@@ -1811,10 +1890,13 @@ MonoBehaviour:
     m_TextClipping: 0
     m_ImagePosition: 3
     m_ContentOffset: {x: 0, y: -690}
+    m_ContentSpacing: 1
     m_FixedWidth: 0
     m_FixedHeight: 0
+    m_ImageIsTopAligned: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
+    m_IsSDF: 0
   - m_Name: LockButton
     m_Normal:
       m_Background: {fileID: 2800000, guid: 02c4c1ab2e7d7114a99436b265074299, type: 3}
@@ -1877,10 +1959,13 @@ MonoBehaviour:
     m_TextClipping: 0
     m_ImagePosition: 1
     m_ContentOffset: {x: 0, y: -150}
+    m_ContentSpacing: 1
     m_FixedWidth: 0
     m_FixedHeight: 0
+    m_ImageIsTopAligned: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
+    m_IsSDF: 0
   - m_Name: LevelButton
     m_Normal:
       m_Background: {fileID: 2800000, guid: 243e0ec10d5488c45b29a2eda1adcc64, type: 3}
@@ -1943,10 +2028,13 @@ MonoBehaviour:
     m_TextClipping: 0
     m_ImagePosition: 1
     m_ContentOffset: {x: 0, y: -150}
+    m_ContentSpacing: 1
     m_FixedWidth: 0
     m_FixedHeight: 0
+    m_ImageIsTopAligned: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
+    m_IsSDF: 0
   m_Settings:
     m_DoubleClickSelectsWord: 1
     m_TripleClickSelectsLine: 1
