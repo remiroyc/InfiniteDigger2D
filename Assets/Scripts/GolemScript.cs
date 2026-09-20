@@ -20,8 +20,8 @@ public class GolemScript : MonoBehaviour
 		{
 				_animator = GetComponent<Animator> ();
 
-				_aGroundChecker = transform.FindChild ("AGroundChecker");
-				_bGroundChecker = transform.FindChild ("BGroundChecker");
+				_aGroundChecker = transform.Find ("AGroundChecker");
+				_bGroundChecker = transform.Find ("BGroundChecker");
 
 				_rock = Resources.Load ("StonePrefab") as GameObject;
 		}

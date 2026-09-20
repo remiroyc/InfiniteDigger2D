@@ -1,0 +1,47 @@
+# Normalize line endings: LF in the repo and in every working tree (Windows, WSL, macOS).
+# Overrides core.autocrlf so the Windows/WSL clones stay diff-identical.
+* text=auto eol=lf
+
+# Unity text-serialized assets (after Force Text)
+*.cs            text eol=lf diff=csharp
+*.shader        text eol=lf
+*.cginc         text eol=lf
+*.compute       text eol=lf
+*.unity         text eol=lf
+*.prefab        text eol=lf
+*.mat           text eol=lf
+*.anim          text eol=lf
+*.controller    text eol=lf
+*.overrideController text eol=lf
+*.physicMaterial     text eol=lf
+*.physicsMaterial2D  text eol=lf
+*.guiskin       text eol=lf
+*.asset         text eol=lf
+*.meta          text eol=lf
+*.json          text eol=lf
+*.txt           text eol=lf
+*.md            text eol=lf
+*.xml           text eol=lf
+
+# Binary assets: never touch
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.psd  binary
+*.gif  binary
+*.tga  binary
+*.tif  binary
+*.ttf  binary
+*.otf  binary
+*.mp3  binary
+*.MP3  binary
+*.wav  binary
+*.ogg  binary
+*.fbx  binary
+*.dll  binary
+*.so   binary
+*.a    binary
+*.jar  binary
+*.aar  binary
+*.pfx  binary
+*.unitypackage binary
