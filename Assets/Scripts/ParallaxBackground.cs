@@ -5,28 +5,12 @@ public class ParallaxBackground : MonoBehaviour {
 
 	public float InitialSpeed;
 
-	void Start () {
-	
-	}
-
 	void Update () {
 
 		foreach (Transform child in transform) {
 
-
-			float coef = 1;
-			switch(child.tag){
-			case "parallax1":
-				coef = 1;
-				break;
-			case "parallax2":
-				coef = 3f;
-					break;
-			default:
-				coef = 1;
-				break;
-
-			}
+			// CompareTag évite l'allocation d'une string par enfant et par frame que provoque child.tag
+			float coef = child.CompareTag ("parallax2") ? 3f : 1f;
 
 			child.position += new Vector3(0, InitialSpeed * coef, 0);
 

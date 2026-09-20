@@ -5,14 +5,6 @@ public class TapControllerScript : MonoBehaviour {
 
 	private bool coroutine;
 
-	void Start () {
-	
-	}
-
-	void Update () {
-	
-	}
-
 	void FixedUpdate(){
 
 		if(!coroutine){

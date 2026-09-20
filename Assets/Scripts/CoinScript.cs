@@ -4,16 +4,7 @@ using System.Collections;
 public class CoinScript : MonoBehaviour
 {
 
-    void Start()
-    {
-
-    }
-
-    void Update()
-    {
-
-    }
-
+	// Appelé par un événement d'animation
 	public void Delete(){
 		Destroy(this.gameObject);
 	}

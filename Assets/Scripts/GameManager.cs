@@ -39,6 +39,14 @@ public class GameManager : MonoBehaviour
 		private bool _spawningBoss = false;
 		private bool _gameStarted = false;
 		private bool _scoreSaved = false;
+		private Camera _camera;
+		private CameraManager _cameraManager;
+		private Coroutine _monsterRoutine;
+		// Les paliers (messages, difficulté) ne doivent se déclencher qu'une fois par mètre parcouru
+		private int _lastMilestoneMeters = -1;
+		// Libellés du HUD mis en cache : OnGUI tourne plusieurs fois par frame et chaque ToString alloue
+		private string _metersLabel = "0", _coinsLabel = "0", _dynamitesLabel = "0";
+		private int _lastLabelMeters = -1, _lastLabelCoins = -1, _lastLabelDynamites = -1;
 
     #region MONO BEHAVIOUR METHODS
 
@@ -46,22 +54,25 @@ public class GameManager : MonoBehaviour
 		{
 				_currentModelRaw = new Queue<char[]> ();
 				_characterController = Character.GetComponent<CharacterControllerScript> ();
+				_camera = Camera.main;
+				_cameraManager = _camera.GetComponent<CameraManager> ();
 
 				Time.timeScale = 0;
 				_yourBestScore = PlayerPrefs.GetInt ("score");
-				_yTopPosition = Camera.main.transform.position.y + Offset;
-		
-				StartCoroutine (GenerateMonsters ());
+				_yTopPosition = _camera.transform.position.y + Offset;
 
-				Vector3 origin = Camera.main.WorldToScreenPoint (new Vector3 (BrickPrefab.GetComponent<Renderer>().bounds.min.x, BrickPrefab.GetComponent<Renderer>().bounds.max.y, 0f));
-				Vector3 extent = Camera.main.WorldToScreenPoint (new Vector3 (BrickPrefab.GetComponent<Renderer>().bounds.max.x, BrickPrefab.GetComponent<Renderer>().bounds.min.y, 0f));
+				_monsterRoutine = StartCoroutine (GenerateMonsters ());
+
+				var brickBounds = BrickPrefab.GetComponent<Renderer> ().bounds;
+				Vector3 origin = _camera.WorldToScreenPoint (new Vector3 (brickBounds.min.x, brickBounds.max.y, 0f));
+				Vector3 extent = _camera.WorldToScreenPoint (new Vector3 (brickBounds.max.x, brickBounds.min.y, 0f));
 				var brickDim = new Rect (origin.x, Screen.height - origin.y, extent.x - origin.x, origin.y - extent.y);
 		
 				_nbBrick = (int)(Screen.width / brickDim.width) + 2;
 				_nbDynamites = 5;
 
 				if (ScoreLine != null) {
-						ScoreLine.transform.position = -new Vector3 (0, (Camera.main.transform.position.y + _yourBestScore), 0);
+						ScoreLine.transform.position = -new Vector3 (0, (_camera.transform.position.y + _yourBestScore), 0);
 				}
 
 		}
@@ -88,7 +99,7 @@ public class GameManager : MonoBehaviour
 				BlackCache.SetActive (false);
 				Time.timeScale = 1;
 
-				Camera.main.GetComponent<CameraManager> ().enabled = true;
+				_cameraManager.enabled = true;
 				this.GetComponent<AudioSource> ().Play ();
 
 				StartCoroutine (DisplayMessage (LocalizationStrings.Instance.Values ["FirstGameMessage"], 5));
@@ -118,10 +129,8 @@ public class GameManager : MonoBehaviour
 								GUI.Label (new Rect (_virtualWidth * 0.1f, _virtualHeight - 100, _virtualWidth * 0.8f, 80), _messageToDisplay, "BlackMessage");
 						}
 */
-						string strMeters = (_meters >= 1000) ? (_meters / 1000) + "K" : _meters.ToString ();
-
-						GUI.Box (new Rect (_virtualWidth * 0.3f, _virtualWidth * 0.03f, _virtualWidth * 0.2f, _virtualWidth * 0.077f), strMeters, "DistanceHub");
-						GUI.Box (new Rect (_virtualWidth * 0.03f, _virtualWidth * 0.03f, _virtualWidth * 0.2f, _virtualWidth * 0.077f), _characterController.Coins.ToString (), "CoinHub");
+						GUI.Box (new Rect (_virtualWidth * 0.3f, _virtualWidth * 0.03f, _virtualWidth * 0.2f, _virtualWidth * 0.077f), _metersLabel, "DistanceHub");
+						GUI.Box (new Rect (_virtualWidth * 0.03f, _virtualWidth * 0.03f, _virtualWidth * 0.2f, _virtualWidth * 0.077f), _coinsLabel, "CoinHub");
 
 						// GUI.Label (new Rect (5, 35, 150, 25), "Votre meilleur score : " + _yourBestScore);
 
@@ -165,7 +174,7 @@ public class GameManager : MonoBehaviour
 
 						} else {
 
-								if (GUI.Button (new Rect (_virtualWidth - (_virtualWidth * 0.30f), (_virtualWidth * 0.03f), (_virtualWidth * 0.1f), (_virtualWidth * 0.1f)), _nbDynamites.ToString (), "ExplosionButton")) {
+								if (GUI.Button (new Rect (_virtualWidth - (_virtualWidth * 0.30f), (_virtualWidth * 0.03f), (_virtualWidth * 0.1f), (_virtualWidth * 0.1f)), _dynamitesLabel, "ExplosionButton")) {
 
 										if (_nbDynamites > 0) {
 												--_nbDynamites;
@@ -203,11 +212,13 @@ public class GameManager : MonoBehaviour
 						return;
 				}
 
-				var camManager = Camera.main.GetComponent<CameraManager> ();
+				RefreshHudLabels ();
+
+				var camManager = _cameraManager;
 
 				if (_characterController != null && _characterController.IsDied) {
 						_died = true;
-						Camera.main.GetComponent<CameraManager> ().enabled = false;
+						_cameraManager.enabled = false;
 
 						if (!_scoreSaved) {
 								SaveScore ();
@@ -215,22 +226,19 @@ public class GameManager : MonoBehaviour
 						return;
 				}
 
-				
-
-
 				// Si le personnage se trouve dans les 30% du bas de l'écran on accélère la caméra
-				if (Camera.main.WorldToScreenPoint (Character.position).y <= (Screen.width * 0.3)) {
-					camManager.CameraSpeed = (0.01f + (0.0015f * _difficulty)) * 5; 
+				if (_camera.WorldToScreenPoint (Character.position).y <= (Screen.width * 0.3)) {
+					camManager.CameraSpeed = (0.01f + (0.0015f * _difficulty)) * 5;
 				} else {
 					camManager.CameraSpeed = 0.01f + (0.0015f * _difficulty);
 				}
-		
-				_yTopPosition = Camera.main.transform.position.y + Offset;
+
+				_yTopPosition = _camera.transform.position.y + Offset;
 				if (Character.position.y > _yTopPosition) {
 					KillPlayerAndDestroyGround (camManager);
-				} 
+				}
 
-				if (_groundRaws != null && _groundRaws.Any ()) {
+				if (_groundRaws.Count > 0) {
 					
 					GroundRaw ground = _groundRaws.Peek ();
 					
@@ -252,38 +260,46 @@ public class GameManager : MonoBehaviour
 
 				_meters = Mathf.RoundToInt (camManager.Distance);
 
-		if (_yourBestScore > _meters && _meters == _yourBestScore - (_yourBestScore * 0.20f)) {
-			
-			
-			
-			StartCoroutine (DisplayMessage (string.Format (LocalizationStrings.Instance.Values ["BreakYourRecord"], _yourBestScore - _meters), 5));
-		} else {
-			
-			switch (_meters) {
-				
-			case 10:
-				StartCoroutine (DisplayMessage (LocalizationStrings.Instance.Values ["BeCareful"], 5));
-				break;
-			case 20:
-				StartCoroutine (DisplayMessage (LocalizationStrings.Instance.Values ["GoodJobContinue"], 5));
-				break;
-			case 25:
-				// StartCoroutine (DisplayMessage ("Boss incoming !!!", 5));
-				break;
-			}
-		}
-		
-		/*
-				if (_meters == 30 && !_spawningBoss) {
-						StartCoroutine (CreateBoss ());
+				// Un mètre dure une centaine de frames : sans ce garde, le message "BeCareful" partait
+				// ~100 fois à 10 m (autant de coroutines) et la difficulté gagnait +0.07 par frame
+				// tant que _meters restait multiple de 15, soit +7 d'un coup au lieu de +0.07.
+				if (_meters == _lastMilestoneMeters) {
+						return;
 				}
-		        */
-		
-		
-		if (_meters > 0 && _meters % 15 == 0) {
-			_difficulty += 0.07f;
+				_lastMilestoneMeters = _meters;
+
+				if (_yourBestScore > _meters && _meters == _yourBestScore - (_yourBestScore * 0.20f)) {
+						StartCoroutine (DisplayMessage (string.Format (LocalizationStrings.Instance.Values ["BreakYourRecord"], _yourBestScore - _meters), 5));
+				} else {
+						switch (_meters) {
+						case 10:
+								StartCoroutine (DisplayMessage (LocalizationStrings.Instance.Values ["BeCareful"], 5));
+								break;
+						case 20:
+								StartCoroutine (DisplayMessage (LocalizationStrings.Instance.Values ["GoodJobContinue"], 5));
+								break;
+						}
+				}
+
+				if (_meters > 0 && _meters % 15 == 0) {
+						_difficulty += 0.07f;
+				}
 		}
 
+		private void RefreshHudLabels ()
+		{
+				if (_meters != _lastLabelMeters) {
+						_lastLabelMeters = _meters;
+						_metersLabel = (_meters >= 1000) ? (_meters / 1000) + "K" : _meters.ToString ();
+				}
+				if (_characterController != null && _characterController.Coins != _lastLabelCoins) {
+						_lastLabelCoins = _characterController.Coins;
+						_coinsLabel = _lastLabelCoins.ToString ();
+				}
+				if (_nbDynamites != _lastLabelDynamites) {
+						_lastLabelDynamites = _nbDynamites;
+						_dynamitesLabel = _nbDynamites.ToString ();
+				}
 		}
 
     #endregion
@@ -354,7 +370,7 @@ public class GameManager : MonoBehaviour
 				BlackHub.gameObject.SetActive (true);
 				_isPaused = true;
 				_characterController.IsActive = false;
-				Camera.main.GetComponent<CameraManager> ().enabled = false;
+				_cameraManager.enabled = false;
 
 				// StopCoroutine ("GenerateInfiniteGround");
 
@@ -373,9 +389,13 @@ public class GameManager : MonoBehaviour
 				_died = false;
 				_characterController.IsDied = false;
 				_meters = 0;
-				Camera.main.GetComponent<CameraManager> ().enabled = true;
-				StartCoroutine (GenerateMonsters ());
-				
+				_cameraManager.enabled = true;
+
+				// Une seule boucle de spawn : l'ancien code en empilait une par reprise de pause
+				if (_monsterRoutine != null) {
+						StopCoroutine (_monsterRoutine);
+				}
+				_monsterRoutine = StartCoroutine (GenerateMonsters ());
 		}
 
 		private IEnumerator GenerateMonsters ()
@@ -563,7 +583,7 @@ public class GameManager : MonoBehaviour
 
 				_died = true;
 				cam.enabled = false;
-				while (_groundRaws.Any()) {
+				while (_groundRaws.Count > 0) {
 						GroundRaw go = _groundRaws.Dequeue ();
 						Destroy (go.gameObject);
 				}

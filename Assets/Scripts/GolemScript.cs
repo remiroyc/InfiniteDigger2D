@@ -14,20 +14,18 @@ public class GolemScript : MonoBehaviour
 		private Animator _animator;
 		private bool _attacking = false, _died = false;
 		private GameObject _rock;
+		private Rigidbody2D _rigidbody;
 		public float stoneSpeed = 1;
 
 		void Awake ()
 		{
 				_animator = GetComponent<Animator> ();
+				_rigidbody = GetComponent<Rigidbody2D> ();
 
 				_aGroundChecker = transform.Find ("AGroundChecker");
 				_bGroundChecker = transform.Find ("BGroundChecker");
 
 				_rock = Resources.Load ("StonePrefab") as GameObject;
-		}
-
-		void Start ()
-		{
 		}
 
 		void Update ()
@@ -80,7 +78,7 @@ public class GolemScript : MonoBehaviour
 										move *= -1;
 								}
 
-								GetComponent<Rigidbody2D>().linearVelocity = (new Vector2 (move * 100, GetComponent<Rigidbody2D>().linearVelocity.y));
+								_rigidbody.linearVelocity = new Vector2 (move * 100, _rigidbody.linearVelocity.y);
 								_animator.SetFloat ("MoveSpeed", Mathf.Abs (move));
 								/*
 				} else if(nextBackGround != null) {

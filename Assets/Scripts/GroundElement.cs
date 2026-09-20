@@ -22,6 +22,7 @@ public class GroundElement : MonoBehaviour
 		public Sprite[] Sprites;
 		public GameObject ExplosionPrefab;
 		private SpriteRenderer _spriteManager;
+		private static GameObject _mortalExplosionPrefab;
 
     #region MONO BEHAVIOUR METHODS
 
@@ -111,8 +112,10 @@ public class GroundElement : MonoBehaviour
 
 		public void MortalExplosion ()
 		{
-				var explosionPrefab = Resources.Load ("ExplosionPrefab") as GameObject;
-				Instantiate (explosionPrefab, this.transform.position, Quaternion.identity);
+				if (_mortalExplosionPrefab == null) {
+						_mortalExplosionPrefab = Resources.Load ("ExplosionPrefab") as GameObject;
+				}
+				Instantiate (_mortalExplosionPrefab, this.transform.position, Quaternion.identity);
 				Destroy (this.gameObject);
 		}
 

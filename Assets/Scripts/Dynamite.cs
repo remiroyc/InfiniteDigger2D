@@ -13,11 +13,6 @@ public class Dynamite : MonoBehaviour
 				StartCoroutine (Bang ());
 		}
 
-		void Update ()
-		{
-	
-		}
-
 		IEnumerator Bang ()
 		{
 

@@ -22,6 +22,9 @@ public class CharacterControllerScript : MonoBehaviour
 		private Collider2D _playerHit, _hit;
 		private bool _touched = false, _rightButton = false, _leftButton = false;
 		private Rigidbody2D _rigidbody;
+		private ContactFilter2D _coinFilter;
+		private readonly Collider2D[] _coinBuffer = new Collider2D[8];
+		private GameObject _coinScorePrefab;
 		public float Move;
 		public int NbAttack = 0;
 		public GameManager GameManager;
@@ -44,6 +47,12 @@ public class CharacterControllerScript : MonoBehaviour
 				_audioCharacter = this.GetComponent<AudioSource> ();
 				_rigidbody = this.GetComponent<Rigidbody2D> ();
 				GameManager = FindAnyObjectByType<GameManager> ();
+
+				// Même sémantique que l'ancien OverlapCircleAll (layer + triggers), sans allocation
+				_coinFilter = new ContactFilter2D ();
+				_coinFilter.SetLayerMask (CoinLayer);
+				_coinFilter.useTriggers = true;
+				_coinScorePrefab = Resources.Load ("100") as GameObject;
 		}
 	
 		void FixedUpdate ()
@@ -229,34 +238,31 @@ public class CharacterControllerScript : MonoBehaviour
 
 		public void DetectCoin ()
 		{
-				Vector2 point = new Vector2 (transform.position.x, transform.position.y);
-				Collider2D[] CoinCollision = Physics2D.OverlapCircleAll (point, 0.5f, CoinLayer);
+				// Appelé à chaque FixedUpdate : pas d'allocation, pas de GameObject.Find.
+				int count = Physics2D.OverlapCircle (transform.position, 0.5f, _coinFilter, _coinBuffer);
+				if (count == 0) {
+						return;
+				}
 
-				if (CoinCollision != null) {
-						
-						AudioSource audioSource = null;
-						GameObject gm = GameObject.Find ("GameManager");
-						if (gm != null) {
-								audioSource = gm.GetComponent<AudioSource> ();
+				for (int i = 0; i < count; i++) {
+						var item = _coinBuffer [i];
+						_coinBuffer [i] = null;
+						if (item == null) {
+								continue;
 						}
 
-						foreach (var item in CoinCollision) {
-
-								if (audioSource != null) {
-										audioSource.clip = CoinAudio;
-										audioSource.Play ();
-								}
-
-								++Coins;
-
-
-			
-								var coinScorePrefab = Resources.Load ("100") as GameObject;
-								Instantiate (coinScorePrefab, item.transform.position, Quaternion.identity);
-				            
-								Destroy (item.gameObject);
-
+						// PlayOneShot sur la source du personnage : l'ancien code écrasait le clip de
+						// l'AudioSource du GameManager, c'est-à-dire la musique, dès la première pièce.
+						if (CoinAudio != null) {
+								_audioCharacter.PlayOneShot (CoinAudio);
 						}
+
+						++Coins;
+
+						if (_coinScorePrefab != null) {
+								Instantiate (_coinScorePrefab, item.transform.position, Quaternion.identity);
+						}
+						Destroy (item.gameObject);
 				}
 		}
 

@@ -8,10 +8,12 @@ public class RatScript : MonoBehaviour
 		public float MaxYPosition;
 		private bool _grounded, _faceCollider, _backCollier, _facingRight = true;
 		private Animator _animator;
+		private Rigidbody2D _rigidbody;
 
 		void Start ()
 		{
 				_animator = GetComponent<Animator> ();
+				_rigidbody = GetComponent<Rigidbody2D> ();
 		}
 
 		void Update ()
@@ -50,10 +52,10 @@ public class RatScript : MonoBehaviour
 								}
 						}
 
-						GetComponent<Rigidbody2D>().linearVelocity = (new Vector2 (move, GetComponent<Rigidbody2D>().linearVelocity.y));
+						_rigidbody.linearVelocity = new Vector2 (move, _rigidbody.linearVelocity.y);
 						_animator.SetFloat ("MoveSpeed", Mathf.Abs (move));
 				} else {
-						GetComponent<Rigidbody2D>().linearVelocity = new Vector2(0, GetComponent<Rigidbody2D>().linearVelocity.y);
+						_rigidbody.linearVelocity = new Vector2 (0, _rigidbody.linearVelocity.y);
 						_animator.SetFloat ("MoveSpeed", 0);
 				}
 		}

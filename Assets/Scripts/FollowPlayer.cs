@@ -6,10 +6,6 @@ public class FollowPlayer : MonoBehaviour {
 	public Transform Target;
 	public float Distance;
 
-	void Start () {
-	
-	}
-
 	void Update () {
 
 		var z = Target.transform.position.z - Distance;

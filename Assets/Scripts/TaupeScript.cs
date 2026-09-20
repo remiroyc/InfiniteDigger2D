@@ -19,10 +19,6 @@ public class TaupeScript : MonoBehaviour {
 		Player = GameObject.Find("MinerCharacter").transform;
 	}
 
-	void Start () {
-		
-	}
-
 	void Update () {
 
 		if (!_attacking) {

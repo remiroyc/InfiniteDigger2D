@@ -6,10 +6,6 @@ public class ScoreLineScript : MonoBehaviour
 
 		public GUIStyle style;
 
-		void Start ()
-		{
-		}
-
 		void OnGUI ()
 		{
 				// GUI.matrix = _matrix;

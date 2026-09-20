@@ -171,16 +171,6 @@ public class TutorialScript : MonoBehaviour
 
 		}
 
-		public void FixedUpdate ()
-		{
-			/*
-				if (_scrollCamDistance > 0) {
-						_scrollCamDistance -= 0.1f;
-						Camera.main.transform.position = new Vector3 (Camera.main.transform.position.x, Camera.main.transform.position.y - 0.05f, Camera.main.transform.position.z);
-				}
-				*/
-		}
-
 		IEnumerator SetCurrentSetAfterSec (float seconds, TutorialState state)
 		{
 				yield return new WaitForSeconds (seconds);

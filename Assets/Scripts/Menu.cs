@@ -21,6 +21,8 @@ public class Menu : MonoBehaviour
 		public Vector2 scrollPosition = Vector2.zero;
 		private string _username = string.Empty;
 		private string _message = string.Empty;
+		private string _connectionMessage, _connectionMessageUsername;
+		private int _connectionMessageBest = -1;
 
 		void Start ()
 		{
@@ -136,14 +138,16 @@ public class Menu : MonoBehaviour
 
 		public void DisplayMainMenu ()
 		{
-				string connectionMessage;
+				// OnGUI tourne plusieurs fois par frame : on ne reformate que si les données changent
 				if (_dbScript.User == null) {
-						connectionMessage = LocalizationStrings.Instance.Values ["TryingToConnect"];
-				} else {
-						connectionMessage = string.Format (LocalizationStrings.Instance.Values ["YouAreConnected"], _dbScript.User.Username, _dbScript.User.BestScore);
+						_connectionMessage = LocalizationStrings.Instance.Values ["TryingToConnect"];
+				} else if (_connectionMessage == null || _connectionMessageUsername != _dbScript.User.Username || _connectionMessageBest != _dbScript.User.BestScore) {
+						_connectionMessageUsername = _dbScript.User.Username;
+						_connectionMessageBest = _dbScript.User.BestScore;
+						_connectionMessage = string.Format (LocalizationStrings.Instance.Values ["YouAreConnected"], _connectionMessageUsername, _connectionMessageBest);
 				}
 
-				GUI.Label (new Rect (0, virtualHeight - (virtualHeight * 0.085f), virtualWidth, virtualHeight * 0.085f), connectionMessage);
+				GUI.Label (new Rect (0, virtualHeight - (virtualHeight * 0.085f), virtualWidth, virtualHeight * 0.085f), _connectionMessage);
 
 				GUI.Box (new Rect ((virtualWidth - (virtualWidth * 0.8f)) / 2, virtualHeight * 0.05f, virtualWidth * 0.8f, virtualWidth * 0.1f), "Infinite Digger", "Title");
 

@@ -24,7 +24,7 @@ public class CameraManager : MonoBehaviour
 				if (!_finished) {
 
 						if (EndZoneTransform != null) {
-								var diff = Camera.main.transform.position - EndZoneTransform.position;
+								var diff = transform.position - EndZoneTransform.position;
 								if (diff.y <= 0) {
 										_finished = true;
 								} else {
@@ -38,8 +38,10 @@ public class CameraManager : MonoBehaviour
 
 		public void TickCamera ()
 		{
-				var newPosition = new Vector3 (Camera.main.transform.position.x, Camera.main.transform.position.y - CameraSpeed, Camera.main.transform.position.z);
-				Camera.main.transform.position = newPosition;
+				// Ce script est posé sur la caméra principale : transform suffit.
+				var newPosition = transform.position;
+				newPosition.y -= CameraSpeed;
+				transform.position = newPosition;
 				++cameraTick;
 				Distance = Vector3.Distance (_initialPos, transform.position);
 		}
