@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using System.Collections;
 
 public enum MenuState
@@ -73,7 +74,7 @@ public class Menu : MonoBehaviour
 				GUI.Box (new Rect (0, virtualHeight * 0.05f, virtualWidth * 0.99f, virtualWidth * 1.4f), LocalizationStrings.Instance.Values ["LevelSelection"], "LevelBox");
 
 				if (GUI.Button (new Rect (150, 500, 200, 200), "Level 1", "LevelButton")) {
-						Application.LoadLevel ("Level1");
+						SceneManager.LoadScene ("Level1");
 				}
 
 				GUI.Button (new Rect (450, 500, 200, 200), "Level 2", "LockButton");
@@ -151,12 +152,12 @@ public class Menu : MonoBehaviour
 				if (GUI.Button (new Rect ((virtualWidth - (virtualWidth * 0.8f)) / 2, virtualHeight * 0.2f, virtualWidth * 0.8f, virtualWidth * 0.1248f), LocalizationStrings.Instance.Values ["Play"])) {
 
 						CurrentMenuState = MenuState.LEVELS;
-						// Application.LoadLevel ("test");
+						// SceneManager.LoadScene ("test");
 				}
 */
 
 				if (GUI.Button (new Rect ((virtualWidth - (virtualWidth * 0.8f)) / 2, virtualHeight * 0.3f, virtualWidth * 0.8f, virtualWidth * 0.1248f), LocalizationStrings.Instance.Values ["ChallengeMode"])) {
-						Application.LoadLevel ("test");
+						SceneManager.LoadScene ("test");
 				}
 
 				if (_dbScript.User != null) {

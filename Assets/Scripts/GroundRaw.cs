@@ -96,7 +96,7 @@ public class GroundRaw : MonoBehaviour
 				GroundElements = new GroundElement[NbElements];
 				for (int i = 0; i < NbElements; i++) {
 
-						if (elems.ElementAtOrDefault (i) != null) {
+						if (elems != null) {
 
 								char charElem = 'A';
 

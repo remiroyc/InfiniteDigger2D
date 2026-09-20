@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
@@ -153,11 +154,11 @@ public class GameManager : MonoBehaviour
 
 								if (GUI.Button (new Rect ((_virtualWidth - (_virtualWidth * 0.4f)) / 2, _virtualHeight * 0.4f, (_virtualWidth * 0.4f), (_virtualWidth * 0.13f)), LocalizationStrings.Instance.Values ["Restart"])) {
 										Replay ();
-										Application.LoadLevel ("test");
+										SceneManager.LoadScene ("test");
 								}
 
 								if (GUI.Button (new Rect ((_virtualWidth - (_virtualWidth * 0.4f)) / 2, _virtualHeight * 0.5f, (_virtualWidth * 0.4f), (_virtualWidth * 0.13f)), LocalizationStrings.Instance.Values ["Menu"])) {
-										Application.LoadLevel ("menu");
+										SceneManager.LoadScene ("menu");
 								}
 								
 
@@ -336,12 +337,12 @@ public class GameManager : MonoBehaviour
 
 				if (GUI.Button (new Rect (_virtualWidth * 0.50f, _virtualHeight * 0.58f, _virtualWidth * 0.15f, _virtualWidth * 0.15f), string.Empty, "HomeButton")) {
 						Replay ();
-						Application.LoadLevel ("menu");
+						SceneManager.LoadScene ("menu");
 				}
 
 				if (GUI.Button (new Rect (_virtualWidth * 0.70f, _virtualHeight * 0.58f, _virtualWidth * 0.15f, _virtualWidth * 0.15f), string.Empty, "ReplayButton")) {
 						Replay ();
-						Application.LoadLevel ("test");
+						SceneManager.LoadScene ("test");
 				}
 
 		}

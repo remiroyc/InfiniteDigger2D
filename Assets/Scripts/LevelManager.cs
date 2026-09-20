@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 using System.Collections;
 
 public class LevelManager : MonoBehaviour
@@ -13,11 +14,9 @@ public class LevelManager : MonoBehaviour
 		private float _virtualHeight = 1920f;
 		private float _virtualWidth = 1080f;
 		private Matrix4x4 _matrix;
-		private bool _died = false, _isPaused = false, _scoreSaved = false, _win =false;
+		private bool _died = false, _scoreSaved = false, _win =false;
 
 	public GUISkin Skin;
-
-	private float _levelTime = 0;
 
 		void Awake ()
 		{
@@ -43,7 +42,7 @@ public class LevelManager : MonoBehaviour
 			GUI.Label(new Rect(600,600, 89, 122), CharController.Coins.ToString(), "DollarPic");
 
 				if(GUI.Button(new Rect(700, 1500, 200, 200), string.Empty, "HomeButton")){
-					Application.LoadLevel("menu");
+					SceneManager.LoadScene("menu");
 				}
 			}
 		}
@@ -79,7 +78,6 @@ public class LevelManager : MonoBehaviour
 		}
 
 		public void Win(){
-			_levelTime = Time.timeSinceLevelLoad;
 			_win = true;
 			Time.timeScale = 0;
 			// StartCoroutine(ChangeLevel());
@@ -96,13 +94,13 @@ public class LevelManager : MonoBehaviour
 
 		IEnumerator ChangeLevel(){
 			yield return new WaitForSeconds(3);
-			Application.LoadLevel("menu");
+			SceneManager.LoadScene("menu");
 		}
 
 		public void SaveScore ()
 		{
 				_scoreSaved = true;
-				PlayerPrefs.SetInt (Application.loadedLevelName, 1);
+				PlayerPrefs.SetInt (SceneManager.GetActiveScene ().name, 1);
 				PlayerPrefs.Save ();
 		}
 
