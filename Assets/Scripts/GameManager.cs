@@ -24,10 +24,7 @@ public class GameManager : MonoBehaviour
 		private int _meters, _finalScore;
 		private int _nbRaws;
 		private int _nbBrick;
-		public GUISkin _skin;
 		public Transform ScoreLine;
-		private float _virtualHeight = 1920f;
-		private float _virtualWidth = 1080f;
 		private CharacterControllerScript _characterController;
 		private float _yTopPosition;
 		private int _yourBestScore;
@@ -44,9 +41,9 @@ public class GameManager : MonoBehaviour
 		private Coroutine _monsterRoutine;
 		// Les paliers (messages, difficulté) ne doivent se déclencher qu'une fois par mètre parcouru
 		private int _lastMilestoneMeters = -1;
-		// Libellés du HUD mis en cache : OnGUI tourne plusieurs fois par frame et chaque ToString alloue
-		private string _metersLabel = "0", _coinsLabel = "0", _dynamitesLabel = "0";
-		private int _lastLabelMeters = -1, _lastLabelCoins = -1, _lastLabelDynamites = -1;
+		// HUD uGUI construit par code (compteurs, vie, boutons, pause, mort)
+		private GameHud _hud;
+		private bool _deathShown;
 
     #region MONO BEHAVIOUR METHODS
 
@@ -58,6 +55,7 @@ public class GameManager : MonoBehaviour
 				_cameraManager = _camera.GetComponent<CameraManager> ();
 
 				Time.timeScale = 0;
+				_nbDynamites = 5;
 				_yourBestScore = PlayerPrefs.GetInt ("score");
 				_yTopPosition = _camera.transform.position.y + Offset;
 
@@ -69,12 +67,17 @@ public class GameManager : MonoBehaviour
 				var brickDim = new Rect (origin.x, Screen.height - origin.y, extent.x - origin.x, origin.y - extent.y);
 		
 				_nbBrick = (int)(Screen.width / brickDim.width) + 2;
-				_nbDynamites = 5;
 
 				if (ScoreLine != null) {
 						ScoreLine.transform.position = -new Vector3 (0, (_camera.transform.position.y + _yourBestScore), 0);
 				}
 
+				// En dernier : une UI qui échoue (ex. ressources TMP absentes) ne doit pas empêcher la partie
+				try {
+						WireHud ();
+				} catch (System.Exception e) {
+						Debug.LogError ("[GameManager] HUD non créé : " + e.Message + "\nWindow > TextMeshPro > Import TMP Essential Resources ?");
+				}
 		}
 	
 		void Start ()
@@ -105,107 +108,6 @@ public class GameManager : MonoBehaviour
 				StartCoroutine (DisplayMessage (LocalizationStrings.Instance.Values ["FirstGameMessage"], 5));
 		}
 
-		void OnGUI ()
-		{
-
-				if (!_gameStarted) {
-						return;
-				}
-
-				GUI.matrix = VirtualGui.Matrix;
-				_virtualHeight = VirtualGui.Height;
-				GUI.skin = _skin;
-
-				if (_died) {
-
-						Time.timeScale = 0;
-						DisplayScore ();
-
-						
-				} else {
-
-			/*
-						if (!string.IsNullOrEmpty (_messageToDisplay)) {
-								GUI.Label (new Rect (_virtualWidth * 0.1f, _virtualHeight - 100, _virtualWidth * 0.8f, 80), _messageToDisplay, "BlackMessage");
-						}
-*/
-						GUI.Box (new Rect (_virtualWidth * 0.3f, _virtualWidth * 0.03f, _virtualWidth * 0.2f, _virtualWidth * 0.077f), _metersLabel, "DistanceHub");
-						GUI.Box (new Rect (_virtualWidth * 0.03f, _virtualWidth * 0.03f, _virtualWidth * 0.2f, _virtualWidth * 0.077f), _coinsLabel, "CoinHub");
-						DrawHealthBar ();
-
-						// GUI.Label (new Rect (5, 35, 150, 25), "Votre meilleur score : " + _yourBestScore);
-
-						if (_isPaused) {
-
-								GUI.Box (new Rect ((_virtualWidth - (_virtualWidth * 0.8f)) / 2, _virtualHeight * 0.2f, _virtualWidth * 0.8f, _virtualWidth), LocalizationStrings.Instance.Values ["Pause"], "LayoutOption");
-					
-
-								if (!AudioListener.pause) {
-
-										if (GUI.Button (new Rect (_virtualWidth - (_virtualWidth * 0.30f), (_virtualWidth * 0.03f), (_virtualWidth * 0.1f), (_virtualWidth * 0.1f)), string.Empty, "SoundButton")) {
-												AudioListener.pause = !AudioListener.pause;
-										}
-
-								} else {
-				
-										if (GUI.Button (new Rect (_virtualWidth - (_virtualWidth * 0.30f), (_virtualWidth * 0.03f), (_virtualWidth * 0.1f), (_virtualWidth * 0.1f)), string.Empty, "SoundButton2")) {
-												AudioListener.pause = !AudioListener.pause;
-										}
-
-								}
-				                       
-				                       
-								if (GUI.Button (new Rect ((_virtualWidth - (_virtualWidth * 0.4f)) / 2, _virtualHeight * 0.3f, (_virtualWidth * 0.4f), (_virtualWidth * 0.13f)), LocalizationStrings.Instance.Values ["Resume"])) {
-										Replay ();
-								}
-
-								if (GUI.Button (new Rect ((_virtualWidth - (_virtualWidth * 0.4f)) / 2, _virtualHeight * 0.4f, (_virtualWidth * 0.4f), (_virtualWidth * 0.13f)), LocalizationStrings.Instance.Values ["Restart"])) {
-										Replay ();
-										SceneManager.LoadScene ("test");
-								}
-
-								if (GUI.Button (new Rect ((_virtualWidth - (_virtualWidth * 0.4f)) / 2, _virtualHeight * 0.5f, (_virtualWidth * 0.4f), (_virtualWidth * 0.13f)), LocalizationStrings.Instance.Values ["Menu"])) {
-										SceneManager.LoadScene ("menu");
-								}
-								
-
-								if (GUI.Button (new Rect ((_virtualWidth - (_virtualWidth * 0.4f)) / 2, _virtualHeight * 0.6f, (_virtualWidth * 0.4f), (_virtualWidth * 0.13f)), LocalizationStrings.Instance.Values ["Quit"])) {
-										Application.Quit ();
-								}
-
-						} else {
-
-								if (GUI.Button (new Rect (_virtualWidth - (_virtualWidth * 0.30f), (_virtualWidth * 0.03f), (_virtualWidth * 0.1f), (_virtualWidth * 0.1f)), _dynamitesLabel, "ExplosionButton")) {
-
-										if (_nbDynamites > 0) {
-												--_nbDynamites;
-												_characterController.ThrowDynamite ();
-										} else {
-												StartCoroutine (DisplayMessage (LocalizationStrings.Instance.Values ["NoDynamite"], 5));
-										}
-								}
-								
-								// GUI.Box (new Rect (0, _virtualHeight - 35, _virtualWidth, 35), string.Empty, "BottomLayout");
-
-								/*
-								if (GUI.Button (new Rect (virtualWidth - 80, virtualHeight - 80, 55, 70), "JUMP", "JumpButton")) {
-										_characterController.Jump ();
-								}
-*/
-
-								if (GUI.Button (new Rect (_virtualWidth - (_virtualWidth * 0.13f), (_virtualWidth * 0.03f), (_virtualWidth * 0.1f), (_virtualWidth * 0.1f)), LocalizationStrings.Instance.Values ["Pause"], "PauseButton")) {
-										Pause ();
-								}
-
-								if (Input.GetKey (KeyCode.Escape)) {
-										Pause ();
-										return;
-								}
-
-						}
-				}
-		}
-	
 		void Update ()
 		{
 
@@ -213,7 +115,18 @@ public class GameManager : MonoBehaviour
 						return;
 				}
 
-				RefreshHudLabels ();
+				if (_died) {
+						ShowDeathOnce ();
+						return;
+				}
+
+				PushHud ();
+
+				// Bouton retour Android / Échap
+				if (!_isPaused && Input.GetKeyDown (KeyCode.Escape)) {
+						Pause ();
+						return;
+				}
 
 				var camManager = _cameraManager;
 
@@ -287,47 +200,6 @@ public class GameManager : MonoBehaviour
 				}
 		}
 
-		/// <summary>
-		/// Barre de vie sous les compteurs pièces / distance. Dessinée avec la texture
-		/// blanche et GUI.color : pas de style ni de texture à ajouter au GUISkin.
-		/// </summary>
-		private void DrawHealthBar ()
-		{
-				if (_characterController == null || _characterController.MaxHealth <= 0) {
-						return;
-				}
-
-				float x = _virtualWidth * 0.03f;
-				float y = _virtualWidth * 0.122f;
-				float width = _virtualWidth * 0.47f;
-				float height = _virtualWidth * 0.03f;
-				float padding = _virtualWidth * 0.004f;
-				float ratio = Mathf.Clamp01 ((float)_characterController.Health / _characterController.MaxHealth);
-
-				var previousColor = GUI.color;
-				GUI.color = new Color (0f, 0f, 0f, 0.6f);
-				GUI.DrawTexture (new Rect (x, y, width, height), Texture2D.whiteTexture);
-				GUI.color = Color.Lerp (new Color (0.85f, 0.15f, 0.15f), new Color (0.25f, 0.8f, 0.3f), ratio);
-				GUI.DrawTexture (new Rect (x + padding, y + padding, (width - 2f * padding) * ratio, height - 2f * padding), Texture2D.whiteTexture);
-				GUI.color = previousColor;
-		}
-
-		private void RefreshHudLabels ()
-		{
-				if (_meters != _lastLabelMeters) {
-						_lastLabelMeters = _meters;
-						_metersLabel = (_meters >= 1000) ? (_meters / 1000) + "K" : _meters.ToString ();
-				}
-				if (_characterController != null && _characterController.Coins != _lastLabelCoins) {
-						_lastLabelCoins = _characterController.Coins;
-						_coinsLabel = _lastLabelCoins.ToString ();
-				}
-				if (_nbDynamites != _lastLabelDynamites) {
-						_lastLabelDynamites = _nbDynamites;
-						_dynamitesLabel = _nbDynamites.ToString ();
-				}
-		}
-
     #endregion
 
 	#region GUI MANAGEMENT
@@ -342,48 +214,71 @@ public class GameManager : MonoBehaviour
 				animator.SetBool ("Visible", false);
 		}
 
-		public void DisplayScore ()
+		private void WireHud ()
 		{
-				BlackHub.gameObject.SetActive (true);
+				_hud = GameHud.Create ();
+				_hud.OnPause = Pause;
+				_hud.OnResume = Replay;
+				_hud.OnRestart = () => { Replay (); SceneManager.LoadScene ("test"); };
+				_hud.OnMenu = () => SceneManager.LoadScene ("menu");
+				_hud.OnQuit = Application.Quit;
+				_hud.OnDynamite = UseDynamite;
+				_hud.OnSoundToggle = ToggleSound;
+				_hud.OnHome = () => { Replay (); SceneManager.LoadScene ("menu"); };
+				_hud.OnReplay = () => { Replay (); SceneManager.LoadScene ("test"); };
+				_hud.SetDynamites (_nbDynamites);
+		}
 
-
-				GUI.Label (new Rect ((_virtualWidth - (_virtualWidth * 0.9f)), 100, _virtualWidth * 0.9f, 100), LocalizationStrings.Instance.Values ["YouAreDead"]);
-
-				GUI.Box (new Rect ((_virtualWidth - (_virtualWidth * 0.9f)) / 3, _virtualHeight * 0.2f, _virtualWidth * 0.9f, _virtualWidth * 0.84f), LocalizationStrings.Instance.Values ["YourScore"], "HighScoreBox");
-				// GUI.Box (new Rect ((_virtualWidth - (_virtualWidth * 0.8f)) / 2, 20, _virtualWidth * 0.8f, _virtualWidth * 0.30f), string.Empty, "HighScore");
-
-				GUI.Label (new Rect (_virtualWidth * 0.3f, _virtualHeight * 0.3f, _virtualWidth * 0.4f, 100f), LocalizationStrings.Instance.Values ["Distance"] + " " + _meters + "m");
-				
+		private void PushHud ()
+		{
+				if (_hud == null) {
+						return;
+				}
+				_hud.SetDistance (_meters);
+				_hud.SetDynamites (_nbDynamites);
 				if (_characterController != null) {
-						GUI.Label (new Rect (_virtualWidth * 0.3f, _virtualHeight * 0.35f, _virtualWidth * 0.4f, 100f), LocalizationStrings.Instance.Values ["CollectedCoins"] + " " + _characterController.Coins);
-						GUI.Label (new Rect (_virtualWidth * 0.3f, _virtualHeight * 0.4f, _virtualWidth * 0.4f, 100f), LocalizationStrings.Instance.Values ["NbTap"] + " " + _characterController.NbAttack);
-						// GUI.Label (new Rect (_virtualWidth * 0.4f, _virtualHeight * 0.4f, _virtualWidth * 0.3f, 100f), LocalizationStrings.Instance.Values ["NbDestroyedObject"]);
+						_hud.SetCoins (_characterController.Coins);
+						_hud.SetHealth (_characterController.Health, _characterController.MaxHealth);
 				}
+		}
 
-				GUI.Label (new Rect (_virtualWidth * 0.3f, _virtualHeight * 0.45f, _virtualWidth * 0.3f, 100f), LocalizationStrings.Instance.Values ["FinalScore"] + " " + _finalScore);
-
-				// GUI.Label (new Rect (_virtualWidth * 0.2f, _virtualHeight * 0.35f, _virtualWidth * 0.3f, 100f), "Username : ");
-				// _username = GUI.TextField (new Rect (_virtualWidth * 0.4f, _virtualHeight * 0.35f, _virtualWidth * 0.4f, 100f), _username);
-
-				// GUI.Label (new Rect (150, 30, 220, 84), "Reminouche"); 
-				// GUI.Label (new Rect (120, 200, 300, 25), "Vous etes mort");
-
-				/*
-				if (GUI.Button (new Rect (_virtualWidth * 0.4f, _virtualHeight * 0.45f, (_virtualWidth * 0.4f), (_virtualWidth * 0.13f)), "Save")) {
-						SaveScore ();
+		private void UseDynamite ()
+		{
+				if (_isPaused || _died) {
+						return;
 				}
-*/
-
-				if (GUI.Button (new Rect (_virtualWidth * 0.50f, _virtualHeight * 0.58f, _virtualWidth * 0.15f, _virtualWidth * 0.15f), string.Empty, "HomeButton")) {
-						Replay ();
-						SceneManager.LoadScene ("menu");
+				if (_nbDynamites > 0) {
+						--_nbDynamites;
+						if (_hud != null) {
+								_hud.SetDynamites (_nbDynamites);
+						}
+						_characterController.ThrowDynamite ();
+				} else {
+						StartCoroutine (DisplayMessage (LocalizationStrings.Instance.Values ["NoDynamite"], 5));
 				}
+		}
 
-				if (GUI.Button (new Rect (_virtualWidth * 0.70f, _virtualHeight * 0.58f, _virtualWidth * 0.15f, _virtualWidth * 0.15f), string.Empty, "ReplayButton")) {
-						Replay ();
-						SceneManager.LoadScene ("test");
+		private void ToggleSound ()
+		{
+				AudioListener.pause = !AudioListener.pause;
+				if (_hud != null) {
+						_hud.SetSoundMuted (AudioListener.pause);
 				}
+		}
 
+		private void ShowDeathOnce ()
+		{
+				if (_deathShown) {
+						return;
+				}
+				_deathShown = true;
+				Time.timeScale = 0;
+				BlackHub.gameObject.SetActive (true);
+				int coins = _characterController != null ? _characterController.Coins : 0;
+				int taps = _characterController != null ? _characterController.NbAttack : 0;
+				if (_hud != null) {
+						_hud.ShowDeath (_meters, coins, taps, _finalScore);
+				}
 		}
 
 	#endregion
@@ -397,9 +292,9 @@ public class GameManager : MonoBehaviour
 				_isPaused = true;
 				_characterController.IsActive = false;
 				_cameraManager.enabled = false;
-
-				// StopCoroutine ("GenerateInfiniteGround");
-
+				if (_hud != null) {
+						_hud.ShowPause (true, AudioListener.pause);
+				}
 		}
 
 		public void Replay ()
@@ -413,9 +308,14 @@ public class GameManager : MonoBehaviour
 				_isPaused = false;
 				_characterController.IsActive = true;
 				_died = false;
+				_deathShown = false;
 				_characterController.IsDied = false;
 				_meters = 0;
 				_cameraManager.enabled = true;
+				if (_hud != null) {
+						_hud.ShowPause (false, AudioListener.pause);
+						_hud.HideDeath ();
+				}
 
 				// Une seule boucle de spawn : l'ancien code en empilait une par reprise de pause
 				if (_monsterRoutine != null) {
