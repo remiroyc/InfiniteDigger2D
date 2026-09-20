@@ -131,6 +131,7 @@ public class GameManager : MonoBehaviour
 */
 						GUI.Box (new Rect (_virtualWidth * 0.3f, _virtualWidth * 0.03f, _virtualWidth * 0.2f, _virtualWidth * 0.077f), _metersLabel, "DistanceHub");
 						GUI.Box (new Rect (_virtualWidth * 0.03f, _virtualWidth * 0.03f, _virtualWidth * 0.2f, _virtualWidth * 0.077f), _coinsLabel, "CoinHub");
+						DrawHealthBar ();
 
 						// GUI.Label (new Rect (5, 35, 150, 25), "Votre meilleur score : " + _yourBestScore);
 
@@ -284,6 +285,31 @@ public class GameManager : MonoBehaviour
 				if (_meters > 0 && _meters % 15 == 0) {
 						_difficulty += 0.07f;
 				}
+		}
+
+		/// <summary>
+		/// Barre de vie sous les compteurs pièces / distance. Dessinée avec la texture
+		/// blanche et GUI.color : pas de style ni de texture à ajouter au GUISkin.
+		/// </summary>
+		private void DrawHealthBar ()
+		{
+				if (_characterController == null || _characterController.MaxHealth <= 0) {
+						return;
+				}
+
+				float x = _virtualWidth * 0.03f;
+				float y = _virtualWidth * 0.122f;
+				float width = _virtualWidth * 0.47f;
+				float height = _virtualWidth * 0.03f;
+				float padding = _virtualWidth * 0.004f;
+				float ratio = Mathf.Clamp01 ((float)_characterController.Health / _characterController.MaxHealth);
+
+				var previousColor = GUI.color;
+				GUI.color = new Color (0f, 0f, 0f, 0.6f);
+				GUI.DrawTexture (new Rect (x, y, width, height), Texture2D.whiteTexture);
+				GUI.color = Color.Lerp (new Color (0.85f, 0.15f, 0.15f), new Color (0.25f, 0.8f, 0.3f), ratio);
+				GUI.DrawTexture (new Rect (x + padding, y + padding, (width - 2f * padding) * ratio, height - 2f * padding), Texture2D.whiteTexture);
+				GUI.color = previousColor;
 		}
 
 		private void RefreshHudLabels ()

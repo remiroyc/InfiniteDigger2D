@@ -31,21 +31,32 @@ public class CharacterControllerScript : MonoBehaviour
 		public LayerMask GroundLayer;
 		public Transform GroundChecker1, GroundChecker2, GroundChecker3, GroundChecker4;
 
+		// Points de vie : la nitro et les pierres retirent des PV au lieu de tuer sur le coup
+		public int MaxHealth = 3;
+		public int NitroDamage = 1;
+		public int StoneDamage = 1;
+		public float InvulnerabilityDuration = 0.8f;
+		public int Health { get; private set; }
+		private bool _invulnerable;
+		private SpriteRenderer _spriteRenderer;
+
     #region MONO BEHAVIOUR METHODS
 
 		void OnCollisionEnter2D (Collision2D col)
 		{
-				if (col.gameObject.tag == "Stone") {
+				if (col.gameObject.CompareTag ("Stone")) {
 						Destroy (col.gameObject);
-						StartCoroutine (Die ());
+						TakeDamage (StoneDamage);
 				}
 		}
-	
+
 		void Start ()
 		{
 				_characterAnimator = this.GetComponent<Animator> ();
 				_audioCharacter = this.GetComponent<AudioSource> ();
 				_rigidbody = this.GetComponent<Rigidbody2D> ();
+				_spriteRenderer = this.GetComponent<SpriteRenderer> ();
+				Health = MaxHealth;
 				GameManager = FindAnyObjectByType<GameManager> ();
 
 				// Même sémantique que l'ancien OverlapCircleAll (layer + triggers), sans allocation
@@ -291,6 +302,52 @@ public class CharacterControllerScript : MonoBehaviour
 				}
 		}
 
+		/// <summary>
+		/// Retire des PV. Ignoré pendant la fenêtre d'invulnérabilité qui suit un coup,
+		/// pour qu'une même pierre ou explosion ne compte pas deux fois.
+		/// </summary>
+		public void TakeDamage (int amount)
+		{
+				if (IsDied || _invulnerable || amount <= 0) {
+						return;
+				}
+
+				Health = Mathf.Max (0, Health - amount);
+
+				if (Health == 0) {
+						StartCoroutine (Die ());
+				} else {
+						StartCoroutine (HitFeedback ());
+				}
+		}
+
+		IEnumerator HitFeedback ()
+		{
+				_invulnerable = true;
+
+				if (ScreamAudio != null) {
+						_audioCharacter.PlayOneShot (ScreamAudio);
+				}
+				Handheld.Vibrate ();
+
+				// Clignotement rouge pendant l'invulnérabilité
+				float elapsed = 0f;
+				bool red = false;
+				while (elapsed < InvulnerabilityDuration) {
+						red = !red;
+						if (_spriteRenderer != null) {
+								_spriteRenderer.color = red ? new Color (1f, 0.4f, 0.4f) : Color.white;
+						}
+						yield return new WaitForSeconds (0.1f);
+						elapsed += 0.1f;
+				}
+				if (_spriteRenderer != null) {
+						_spriteRenderer.color = Color.white;
+				}
+
+				_invulnerable = false;
+		}
+
 		IEnumerator Die ()
 		{
 				GameManager.CalculateFinalScore ();
@@ -364,7 +421,7 @@ public class CharacterControllerScript : MonoBehaviour
 				_attacking = false;
 
 				if (elementManager.CurrentGroundType == GroundType.Nitro) {
-						StartCoroutine (Die ());
+						TakeDamage (NitroDamage);
 				}
 		
 		
