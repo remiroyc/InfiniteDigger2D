@@ -21,11 +21,7 @@ public class CharacterControllerScript : MonoBehaviour
 		private AudioSource _audioCharacter;
 		private Collider2D _playerHit, _hit;
 		private bool _touched = false, _rightButton = false, _leftButton = false;
-		private float startTime;
-		private bool couldBeSwipe;
-		float comfortZone;
-		private float maxSwipeTime = 1;
-		private Vector2 startPos;
+		private Rigidbody2D _rigidbody;
 		public float Move;
 		public int NbAttack = 0;
 		public GameManager GameManager;
@@ -33,13 +29,6 @@ public class CharacterControllerScript : MonoBehaviour
 		public Transform GroundChecker1, GroundChecker2, GroundChecker3, GroundChecker4;
 
     #region MONO BEHAVIOUR METHODS
-
-		void OnGUI ()
-		{
-
-				// GUI.Box (new Rect (Screen.width / 2, Screen.height / 2 - 250, 200, 200), msg);
-				// GUI.Box (new Rect (Screen.width / 2, Screen.height / 2, 200, 200), rigidbody2D.velocity.ToString ());
-		}
 
 		void OnCollisionEnter2D (Collision2D col)
 		{
@@ -53,6 +42,7 @@ public class CharacterControllerScript : MonoBehaviour
 		{
 				_characterAnimator = this.GetComponent<Animator> ();
 				_audioCharacter = this.GetComponent<AudioSource> ();
+				_rigidbody = this.GetComponent<Rigidbody2D> ();
 				GameManager = FindAnyObjectByType<GameManager> ();
 		}
 	
@@ -69,15 +59,15 @@ public class CharacterControllerScript : MonoBehaviour
 
 	
 				if (FaceElementTouched != null && !Grounded) {
-						GetComponent<Rigidbody2D> ().linearVelocity = new Vector2 (0, GetComponent<Rigidbody2D> ().linearVelocity.y); // On n'est soumis qu'à la gravité
+						_rigidbody.linearVelocity = new Vector2 (0, _rigidbody.linearVelocity.y); // On n'est soumis qu'à la gravité
 				} else {
 
-						if (Move * GetComponent<Rigidbody2D> ().linearVelocity.x < maxSpeed) {
-								GetComponent<Rigidbody2D> ().AddForce (Vector2.right * Move * MoveForce);
+						if (Move * _rigidbody.linearVelocity.x < maxSpeed) {
+								_rigidbody.AddForce (Vector2.right * Move * MoveForce);
 						}
-				
-						if (Mathf.Abs (GetComponent<Rigidbody2D> ().linearVelocity.x) > maxSpeed) {
-								GetComponent<Rigidbody2D> ().linearVelocity = new Vector2 (Mathf.Sign (GetComponent<Rigidbody2D> ().linearVelocity.x) * maxSpeed, GetComponent<Rigidbody2D> ().linearVelocity.y);
+
+						if (Mathf.Abs (_rigidbody.linearVelocity.x) > maxSpeed) {
+								_rigidbody.linearVelocity = new Vector2 (Mathf.Sign (_rigidbody.linearVelocity.x) * maxSpeed, _rigidbody.linearVelocity.y);
 						}
 				}
 			
@@ -137,8 +127,13 @@ public class CharacterControllerScript : MonoBehaviour
 						return;
 				}
 
-				var faceHit = Physics2D.Linecast (GroundChecker3.position, GroundChecker4.position, GroundLayer);
-				var newFaceElementTouched = (faceHit.transform != null) ? faceHit.transform.gameObject : null;
+				// Les checkers ne sont câblés que dans la scène test : sans eux, on ne détecte rien
+				// plutôt que de lever une UnassignedReferenceException à chaque frame.
+				GameObject newFaceElementTouched = null;
+				if (GroundChecker3 != null && GroundChecker4 != null) {
+						var faceHit = Physics2D.Linecast (GroundChecker3.position, GroundChecker4.position, GroundLayer);
+						newFaceElementTouched = (faceHit.transform != null) ? faceHit.transform.gameObject : null;
+				}
 				
 				if (newFaceElementTouched != null) {
 					
@@ -158,8 +153,11 @@ public class CharacterControllerScript : MonoBehaviour
 						FaceElementTouched.GetComponent<SpriteRenderer> ().color = Color.white;
 				}
 
-				var groundHit = Physics2D.Linecast (GroundChecker1.position, GroundChecker2.position, GroundLayer);
-				var newGroundElementTouched = (groundHit.transform != null) ? groundHit.transform.gameObject : null;
+				GameObject newGroundElementTouched = null;
+				if (GroundChecker1 != null && GroundChecker2 != null) {
+						var groundHit = Physics2D.Linecast (GroundChecker1.position, GroundChecker2.position, GroundLayer);
+						newGroundElementTouched = (groundHit.transform != null) ? groundHit.transform.gameObject : null;
+				}
 
 				if (newGroundElementTouched != null) {
 		
@@ -197,11 +195,8 @@ public class CharacterControllerScript : MonoBehaviour
 						Move = 0;		
 				}
 
-
-				// DetectSwipe ();
-
 				/*
-				if (!Jumping && !couldBeSwipe) {
+				if (!Jumping) {
 					#if UNITY_EDITOR
 						_touched = Input.GetMouseButtonDown(0);
 					#else
@@ -254,8 +249,6 @@ public class CharacterControllerScript : MonoBehaviour
 
 								++Coins;
 
-								var screenPos = Camera.main.WorldToScreenPoint (item.transform.position);
-								screenPos.y = Screen.height - screenPos.y;
 
 			
 								var coinScorePrefab = Resources.Load ("100") as GameObject;
@@ -285,7 +278,7 @@ public class CharacterControllerScript : MonoBehaviour
 		{
 				if (Grounded) {
 						Grounded = false;
-						GetComponent<Rigidbody2D> ().AddForce (new Vector2 (0, jumpForce));
+						_rigidbody.AddForce (new Vector2 (0, jumpForce));
 						this._characterAnimator.Play ("Jump");
 						yield return new WaitForSeconds (1);
 						Jumping = false;
@@ -338,7 +331,7 @@ public class CharacterControllerScript : MonoBehaviour
 								if (elementToDestroy != null && elementToDestroy.CurrentGroundType != GroundType.IndestructibleBrick) {
 
 										_attacking = true;
-										GetComponent<Rigidbody2D> ().linearVelocity = new Vector2 (0f, GetComponent<Rigidbody2D> ().linearVelocity.y);
+										_rigidbody.linearVelocity = new Vector2 (0f, _rigidbody.linearVelocity.y);
 
 										if (bottomTap) {
 												_characterAnimator.Play ("CrouchTap");
@@ -374,53 +367,6 @@ public class CharacterControllerScript : MonoBehaviour
     #endregion
 
     #region GESTURES MANAGEMENT
-
-		/*
-		public void DetectSwipe ()
-		{
-		
-				if (Input.touchCount > 0) {
-			
-						var touch = Input.GetTouch (0);
-			
-						switch (touch.phase) {
-				
-						case TouchPhase.Began:
-				
-								couldBeSwipe = true;
-								startPos = touch.position;
-								startTime = Time.time;
-								break;
-				
-						case TouchPhase.Moved:
-				
-				
-
-								//if (Mathf.Abs (touch.position.y - startPos.y) > comfortZone) {
-										
-								// }
-
-								break;
-				
-						case TouchPhase.Stationary:
-								couldBeSwipe = false;				
-								break;
-				
-						case TouchPhase.Ended:
-				
-								var swipeTime = Time.time - startTime;
-								if (couldBeSwipe && (swipeTime < maxSwipeTime)) {
-										Jumping = Mathf.Sign (touch.position.y - startPos.y) == 1;
-										if (Jumping) {
-												StartCoroutine (Jump ());
-										}
-								}
-								couldBeSwipe = false;
-								break;
-						}
-				}
-		}
-*/
 
 		public void JumpButtonClicked ()
 		{
